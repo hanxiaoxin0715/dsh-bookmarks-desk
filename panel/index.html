@@ -1,0 +1,3205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>星河书签 · 索引与书脊</title>
+<style>
+  :root {
+    --bg: #08090b;
+    --panel: #0d0f12;
+    --panel-2: #12151a;
+    --line: rgba(255, 255, 255, 0.075);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --text: #e8e6e1;
+    --muted: #8a8f98;
+    --faint: #5e646d;
+    --accent: #d8a657;
+    --accent-soft: rgba(216, 166, 87, 0.12);
+    --card: #14171c;
+    --card-ink: #ecebe6;
+    --card-muted: #7d848d;
+    --card-line: rgba(255, 255, 255, 0.085);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --serif: Georgia, "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(620px 340px at 18% -12%, rgba(216, 166, 87, 0.08), transparent 70%),
+      linear-gradient(180deg, rgba(255,255,255,0.015), transparent 22%);
+    z-index: 0;
+  }
+  button, input { font: inherit; }
+  button { color: inherit; }
+  ::selection { background: rgba(216, 166, 87, 0.28); }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    height: 100dvh;
+    display: grid;
+    grid-template-columns: 238px minmax(0, 1fr);
+  }
+
+  /* ---------- 左侧索引栏 ---------- */
+  .rail {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 13px 14px;
+    border-right: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(13,15,18,0.96), rgba(8,9,11,0.96));
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 2px 6px 18px;
+    flex: 0 0 auto;
+  }
+  .brand-mark {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(216, 166, 87, 0.30);
+    border-radius: 13px;
+    color: var(--accent);
+    background:
+      radial-gradient(120% 130% at 28% 12%, rgba(216,166,87,0.20), transparent 62%),
+      radial-gradient(90% 90% at 80% 96%, rgba(108,155,209,0.16), transparent 70%),
+      linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.008));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.10),
+      0 8px 22px -14px rgba(216,166,87,0.75);
+  }
+  .brand-mark::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 13px;
+    background: linear-gradient(140deg, rgba(216,166,87,0.30), transparent 45%, rgba(108,155,209,0.18));
+    -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 1px;
+    pointer-events: none;
+  }
+  .brand-mark svg {
+    width: 28px;
+    height: 28px;
+    display: block;
+    filter: drop-shadow(0 0 6px rgba(216,166,87,0.30));
+  }
+  .brand-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .brand-copy strong {
+    font-size: 16.5px;
+    line-height: 1.1;
+    letter-spacing: 0.07em;
+    font-weight: 660;
+    background: linear-gradient(96deg, #f3ead9 8%, #e6c78e 52%, #cfa163 92%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .brand-copy span {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.19em;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  .rail-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 6px 12px 8px; flex: 0 0 auto; }
+  .rail-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    color: var(--faint);
+  }
+  .rail-plus {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: rgba(255,255,255,0.03);
+    color: #8d939b;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .rail-plus:hover { color: var(--accent); border-color: rgba(216,166,87,0.4); background: rgba(216,166,87,0.10); }
+  .rail-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    margin: 0 2px 12px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(255,255,255,0.028);
+    flex: 0 0 auto;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .rail-search:focus-within { border-color: rgba(216,166,87,0.34); background: rgba(255,255,255,0.05); }
+  .rail-search svg { width: 13px; height: 13px; flex: 0 0 auto; color: var(--faint); }
+  .rail-search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12.5px;
+  }
+  .rail-search input::placeholder { color: #4d535b; }
+  .rail-search input:focus { outline: none; }
+  .rail-search-clear { border: 0; padding: 0 1px; background: transparent; color: var(--faint); font-size: 14px; line-height: 1; cursor: pointer; }
+  .rail-search-clear:hover { color: var(--text); }
+  /* 列表末尾的「新建主分类」幽灵行 */
+  .tab-add {
+    height: 34px;
+    margin-top: 4px;
+    border: 1px dashed rgba(255,255,255,0.10);
+    color: #6a7078;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .tab-add:hover { border-color: rgba(216,166,87,0.34); background: rgba(216,166,87,0.06); color: #e2c894; }
+  .tab-plus { width: 14px; flex: 0 0 auto; text-align: center; font-size: 12px; line-height: 1; }
+  .tab-input {
+    background: rgba(0,0,0,0.30);
+    border: 1px solid rgba(216,166,87,0.30);
+  }
+  .tab-input .tab-icon.dot::before { background: #c9a768; }
+  .tab-input input {
+    flex: 1;
+    min-width: 0;
+    height: 22px;
+    padding: 0 6px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 11.5px;
+  }
+  .tab-input input::placeholder { color: #565c65; }
+  .tab-input input:focus { outline: none; }
+  .rail-menu {
+    position: fixed;
+    z-index: 90;
+    min-width: 138px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 9px;
+    background: rgba(18,20,24,0.98);
+    box-shadow: 0 18px 40px -18px #000;
+  }
+  .rail-menu[hidden] { display: none; }
+  .rail-menu button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    height: 28px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #c6cbd2;
+    font-family: inherit;
+    font-size: 11.5px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .rail-menu button:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .rail-menu button.is-danger { color: #d98079; }
+  .rail-menu button.is-danger:hover { background: rgba(224,115,108,0.14); }
+  .rail-menu button:disabled { opacity: 0.3; cursor: default; background: transparent; }
+  .rail-menu kbd { font-family: var(--mono); font-size: 8.5px; color: #565c65; }
+  .tabs { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; scrollbar-width: none; flex: 1 1 auto; min-height: 0; padding: 2px 0 6px; }
+  .tabs.is-overflow {
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(180deg, #000 calc(100% - 22px), transparent);
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    height: 36px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.14s ease, color 0.14s ease;
+  }
+  .tab:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  /* 子分类层级引导线（::before 已被选中竖条占用，这里用 ::after） */
+  .tab::after {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: -3px;
+    bottom: -3px;
+    width: calc(var(--d, 0) * 16px);
+    pointer-events: none;
+    background-image: repeating-linear-gradient(to right, rgba(255,255,255,0.075) 0 1px, transparent 1px 16px);
+  }
+  .tab.is-active { background: rgba(255,255,255,0.062); color: var(--text); }
+  .tab.is-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .tab-icon { width: 16px; height: 16px; flex: 0 0 auto; display: grid; place-items: center; color: #6d737c; }
+  .tab-icon svg { width: 13px; height: 13px; display: block; }
+  .tab-icon.dot::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c, #8a8f98); box-shadow: 0 0 0 3px rgba(255,255,255,0.035); }
+  .tab.is-active .tab-icon { color: var(--accent); }
+  .tab-caret { width: 16px; height: 16px; flex: 0 0 auto; display: grid; place-items: center; color: #565c65; transition: transform 0.15s ease; }
+  .tab-caret.is-open { transform: rotate(90deg); }
+  .tab-caret.is-leaf { visibility: hidden; }
+  .tab-caret svg { width: 9px; height: 9px; display: block; }
+  .tab:hover .tab-caret { color: var(--text); }
+  .tab-name { min-width: 0; flex: 1; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tab-count { font-family: var(--mono); font-size: 10px; color: var(--faint); flex: 0 0 auto; transition: opacity 0.12s ease; }
+  .tab.is-active .tab-count { color: var(--accent); }
+  /* 悬停时数字让位给「⋯」 */
+  .tab:hover .tab-count { opacity: 0; }
+  .tab-act {
+    position: absolute;
+    right: 26px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    display: grid;
+    place-items: center;
+    border-radius: 4px;
+    color: #7d848d;
+    font-size: 12px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+  }
+  .tab:hover .tab-act { opacity: 1; }
+  .tab-act:hover { background: rgba(255,255,255,0.11); color: var(--text); }
+  .tab.is-cat .tab-name { font-weight: 560; color: #ded9d0; }
+  .tab.is-cat.is-parent .tab-name { color: #eae5db; }
+  .tab[data-depth="1"] .tab-name { font-size: 12px; font-weight: 400; color: #a6acb4; }
+  .tab[data-depth="1"].is-active .tab-name { color: #e8e3d9; }
+  .tab[data-depth="1"] .tab-icon.dot::before { width: 5px; height: 5px; border-radius: 50%; box-shadow: none; opacity: 0.85; }
+  .tab:not([data-depth="0"]):not([data-depth="1"]) .tab-name { font-size: 11.5px; font-weight: 400; color: #8f959d; }
+  .tab:not([data-depth="0"]) .tab-icon { width: 0; display: none; }
+  .tab-rename {
+    flex: 1;
+    min-width: 0;
+    height: 21px;
+    padding: 0 6px;
+    border: 1px solid rgba(216,166,87,0.45);
+    border-radius: 5px;
+    background: rgba(0,0,0,0.42);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 11.5px;
+  }
+  .tab-rename:focus { outline: none; border-color: rgba(216,166,87,0.75); }
+  .rail-empty {
+    margin: 16px 4px 0;
+    padding: 0 6px;
+    color: #4f555d;
+    font-size: 10.5px;
+    line-height: 1.9;
+  }
+  .rail-empty b { display: block; margin-bottom: 5px; color: #808790; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; }
+  .rail-empty span { display: block; }
+
+  .rail-foot { margin-top: auto; padding: 14px 8px 2px; border-top: 1px solid var(--line); }
+  .rail-note { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 10.5px; color: #8b929b; }
+  .rail-note .pulse { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(216,166,87,0.08); }
+  .rail-hint { margin-top: 10px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; color: #5f666e; }
+
+  /* ---------- 分类设计面板 ---------- */
+  .cm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; }
+  .cm[hidden] { display: none; }
+  .cm-veil { position: absolute; inset: 0; background: rgba(3,4,6,0.72); backdrop-filter: blur(6px); animation: cm-fade 0.18s ease; }
+  .cm-sheet {
+    position: relative;
+    width: min(860px, calc(100vw - 48px));
+    height: min(760px, calc(100dvh - 56px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #0e1014, #0a0c0f);
+    box-shadow: 0 40px 120px -40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: cm-rise 0.22s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes cm-fade { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes cm-rise { from { opacity: 0; transform: translateY(10px) scale(0.99) } to { opacity: 1; transform: none } }
+  .cm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+  .cm-kicker { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; color: var(--accent); }
+  .cm-head h2 { margin: 7px 0 4px; font-family: var(--serif); font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  .cm-head p { margin: 0; font-size: 11px; color: var(--muted); }
+  .cm-x { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+  .cm-x svg { width: 13px; height: 13px; }
+  .cm-x:hover { color: var(--text); border-color: var(--line-strong); }
+
+  .cm-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+  .cm-pane { min-height: 0; display: flex; flex-direction: column; padding: 16px 18px 12px; }
+  .cm-pane.is-cats { display: none; }
+  .cm-pane + .cm-pane { border-left: 1px solid var(--line); }
+  .cm-pane-head { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: var(--faint); }
+  .cm-pane-meta { color: #4b515a; }
+  .cm-mini {
+    border: 0;
+    background: transparent;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+  }
+  .cm-mini:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  .cm-cats, .cm-folders { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; padding-right: 2px; scrollbar-width: thin; scrollbar-color: #262b33 transparent; }
+  .cm-cats::-webkit-scrollbar, .cm-folders::-webkit-scrollbar { width: 5px; }
+  .cm-cats::-webkit-scrollbar-thumb, .cm-folders::-webkit-scrollbar-thumb { background: #262b33; border-radius: 5px; }
+
+  .cm-cat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 6px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.022);
+    border: 1px solid transparent;
+  }
+  /* 层级引导线：每层一条，对齐上一级箭头中心；上下各溢出 3px 把行间空隙连起来 */
+  .cm-cat::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: -3px;
+    bottom: -3px;
+    width: calc(var(--d, 0) * 14px);
+    pointer-events: none;
+    background-image: repeating-linear-gradient(to right, rgba(255,255,255,0.085) 0 1px, transparent 1px 14px);
+    background-repeat: no-repeat;
+  }
+  .cm-cat:hover { background-color: rgba(255,255,255,0.045); }
+  /* 层级越深字号/亮度递减（对任意层数生效，不写死层级） */
+  .cm-cat:not([data-depth="0"]) .cm-name { font-size: 11.5px; color: #c9ced5; }
+  .cm-cat:not([data-depth="0"]):not([data-depth="1"]) .cm-name { font-size: 11px; color: #b3b9c1; }
+  .cm-cat[data-depth="0"] .cm-name { font-weight: 500; }
+  .cm-swatch { width: 12px; height: 12px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 4px; background: var(--c, #8a8f98); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22); cursor: pointer; }
+  .cm-name { flex: 1; min-width: 0; height: 24px; padding: 0 6px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text); font-size: 12px; }
+  .cm-name:hover { border-color: var(--line); }
+  .cm-name:focus { outline: none; border-color: rgba(216,166,87,0.45); background: rgba(0,0,0,0.25); }
+  .cm-count { font-family: var(--mono); font-size: 9px; color: var(--faint); min-width: 26px; text-align: right; }
+  .cm-icon { width: 20px; height: 20px; display: grid; place-items: center; border: 0; border-radius: 4px; background: transparent; color: #565c65; font-size: 11px; cursor: pointer; }
+  .cm-icon:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  .cm-icon:disabled { opacity: 0.28; cursor: default; background: transparent; }
+  .cm-icon.is-danger:hover { color: #e0736c; background: rgba(224,115,108,0.12); }
+  .cm-cat .cm-caret { width: 13px; height: 13px; flex: 0 0 auto; display: grid; place-items: center; color: var(--faint); cursor: pointer; transition: transform 0.15s ease; }
+  .cm-cat .cm-caret.is-open { transform: rotate(90deg); }
+  .cm-cat .cm-caret.is-leaf { visibility: hidden; }
+  .cm-cat .cm-caret svg { width: 8px; height: 8px; }
+  .cm-add-child {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: transparent;
+    color: #6a7078;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cm-add-child:hover { color: var(--accent); border-color: rgba(216,166,87,0.45); background: rgba(216,166,87,0.1); }
+  .cm-parent-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 4px 8px;
+    border: 1px solid rgba(216,166,87,0.28);
+    border-radius: 6px;
+    background: rgba(216,166,87,0.08);
+    font-size: 10px;
+    color: #e2c894;
+  }
+  .cm-parent-chip[hidden] { display: none; }
+  .cm-parent-chip b { font-weight: 600; }
+  .cm-parent-chip button { margin-left: auto; border: 0; background: transparent; color: #8f949c; font-size: 12px; cursor: pointer; }
+  .cm-parent-chip button:hover { color: var(--text); }
+
+  .cm-add { display: flex; gap: 6px; margin-top: 10px; }
+  .cm-add input { flex: 1; min-width: 0; height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; background: rgba(0,0,0,0.3); color: var(--text); font-size: 12px; }
+  .cm-add input:focus { outline: none; border-color: rgba(216,166,87,0.45); }
+  .cm-add button { height: 32px; padding: 0 14px; border: 1px solid rgba(216,166,87,0.28); border-radius: 7px; background: rgba(216,166,87,0.12); color: #e8cf9f; font-size: 11.5px; cursor: pointer; }
+  .cm-add button:hover { background: rgba(216,166,87,0.2); }
+
+  .cm-folder { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 6px; border-radius: 6px; }
+  .cm-folder:hover { background: rgba(255,255,255,0.035); }
+  .cm-caret { width: 14px; height: 14px; flex: 0 0 auto; display: grid; place-items: center; color: var(--faint); cursor: pointer; transition: transform 0.15s ease; }
+  .cm-caret.is-open { transform: rotate(90deg); }
+  .cm-caret.is-leaf { visibility: hidden; }
+  .cm-caret svg { width: 8px; height: 8px; }
+  .cm-fname { flex: 1; min-width: 0; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cm-folder.has-map .cm-fname { color: var(--text); }
+  .cm-fcount { font-family: var(--mono); font-size: 9px; color: var(--faint); }
+  .cm-select { width: 108px; flex: 0 0 auto; height: 24px; padding: 0 4px; border: 1px solid var(--line); border-radius: 6px; background: #14171c; color: var(--muted); font-size: 10.5px; cursor: pointer; }
+  .cm-select:focus { outline: none; border-color: rgba(216,166,87,0.45); }
+  .cm-folder.has-map .cm-select { color: #e6cf9f; border-color: rgba(216,166,87,0.3); }
+
+  .cm-tip { margin: 9px 2px 0; font-size: 9.5px; line-height: 1.6; color: #4d535c; }
+  .cm-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 9px; color: var(--faint); }
+  .cm-done { height: 30px; padding: 0 18px; border: 1px solid rgba(216,166,87,0.32); border-radius: 7px; background: rgba(216,166,87,0.14); color: #ecd7ab; font-size: 11.5px; letter-spacing: 0.06em; cursor: pointer; }
+  .cm-done:hover { background: rgba(216,166,87,0.22); }
+  .cm-empty { padding: 18px 10px; border: 1px dashed var(--line); border-radius: 8px; font-size: 11px; line-height: 1.7; color: #5c626b; text-align: center; }
+
+  @media (max-width: 860px) {
+    .cm-sheet { width: calc(100vw - 20px); height: calc(100dvh - 24px); }
+    .cm-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+    .cm-pane + .cm-pane { border-left: 0; border-top: 1px solid var(--line); }
+  }
+
+  /* ---------- 主区域 ---------- */
+  .main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 0px;
+    transition: grid-template-columns 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .main.has-card .body { grid-template-columns: minmax(0, 1fr) 384px; }
+  .topbar {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: minmax(190px, 1fr) minmax(280px, 430px) auto;
+    gap: 22px;
+    align-items: end;
+    padding: 22px 28px 17px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(8,9,11,0.64);
+    backdrop-filter: blur(14px);
+  }
+  .eyebrow { font-family: var(--mono); font-size: 8px; letter-spacing: 0.18em; color: var(--faint); }
+  .eyebrow span { color: var(--accent); }
+  .heading h1 {
+    margin: 7px 0 3px;
+    font-family: var(--serif);
+    font-size: clamp(22px, 2.1vw, 30px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+  .heading p { margin: 0; font-size: 10.5px; color: var(--muted); }
+  .heading p b { color: var(--text); font-weight: 600; }
+  .heading p .crumb {
+    display: inline-block;
+    max-width: 44ch;
+    margin-right: 8px;
+    padding: 1px 7px 2px;
+    border: 1px solid rgba(216,166,87,0.24);
+    border-radius: 999px;
+    background: rgba(216,166,87,0.07);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+    color: #d8bd8d;
+    vertical-align: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 38px;
+    padding: 0 11px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(255,255,255,0.025);
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  }
+  .search:focus-within {
+    border-color: rgba(216,166,87,0.42);
+    background: rgba(255,255,255,0.035);
+    box-shadow: 0 0 0 3px rgba(216,166,87,0.06);
+  }
+  .search svg { width: 14px; height: 14px; color: var(--faint); flex: 0 0 auto; }
+  .search input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 11.5px;
+  }
+  .search input::placeholder { color: #50555d; }
+  .search kbd {
+    flex: 0 0 auto;
+    padding: 3px 5px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    background: rgba(0,0,0,0.18);
+  }
+
+  .view-switch {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(255,255,255,0.018);
+  }
+  .view-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease;
+  }
+  .view-btn svg { width: 13px; height: 13px; }
+  .view-btn:hover { color: var(--text); }
+  .view-btn.is-active { background: rgba(255,255,255,0.07); color: var(--text); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+
+  .content {
+    min-height: 0;
+    flex: 1;
+    overflow: auto;
+    padding: 0 28px 30px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.14) transparent;
+  }
+  .content::-webkit-scrollbar { width: 8px; height: 8px; }
+  .content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .view.hidden { display: none; }
+
+  /* ---------- 索引视图 ---------- */
+  .index-head, .index-row {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 146px 88px 24px;
+    align-items: center;
+    column-gap: 12px;
+  }
+  @media (min-width: 1180px) {
+    .index-head, .index-row {
+      grid-template-columns: 34px minmax(0, 1.35fr) minmax(0, 1fr) 128px 84px 24px;
+    }
+    .index-head span.h-summary { display: block; }
+    .index-row .row-summary { display: block; }
+    .index-row { min-height: 56px; }
+  }
+  .index-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    height: 38px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(8,9,11,0.9);
+    backdrop-filter: blur(12px);
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    color: var(--faint);
+    text-transform: uppercase;
+  }
+  .index-head .h-time { text-align: right; }
+  .index-head .h-summary { display: none; }
+  .index-row {
+    position: relative;
+    min-height: 58px;
+    border-bottom: 1px solid rgba(255,255,255,0.045);
+    cursor: pointer;
+    transition: background 0.14s ease;
+    content-visibility: auto;
+    contain-intrinsic-size: 58px;
+  }
+  .index-row:hover { background: rgba(255,255,255,0.033); }
+  .index-row.is-selected { background: rgba(216,166,87,0.075); }
+  .index-row.is-selected::before {
+    content: "";
+    position: absolute;
+    left: -28px;
+    top: 9px;
+    bottom: 9px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .row-favicon {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+    overflow: hidden;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .row-favicon img {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+  .row-main { min-width: 0; }
+  .row-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13.5px;
+    font-weight: 550;
+    letter-spacing: 0.005em;
+    color: #dedbd4;
+  }
+  .row-domain {
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--faint);
+  }
+  .row-cat { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .row-summary {
+    display: none;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.5);
+  }  .cat-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+  .cat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: var(--muted); }
+  .row-time { text-align: right; font-family: var(--mono); font-size: 10.5px; color: var(--faint); white-space: nowrap; }
+  .row-arrow { opacity: 0; color: var(--accent); transform: translateX(-3px); transition: opacity 0.16s ease, transform 0.16s ease; }
+  .row-arrow svg { width: 14px; height: 14px; display: block; }
+  .index-row:hover .row-arrow, .index-row.is-selected .row-arrow { opacity: 1; transform: translateX(0); }
+
+  .empty {
+    margin: 34px 0;
+    padding: 54px 24px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 12px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty strong { display: block; margin-bottom: 6px; font-family: var(--serif); font-size: 17px; font-weight: 500; color: var(--text); }
+  .empty span { font-size: 10.5px; }
+  .hidden { display: none !important; }
+
+  /* ---------- 书脊视图 ---------- */
+  #shelfView {
+    position: relative;
+    margin: 0 -28px;
+    padding: 2px 28px 46px;
+    background:
+      radial-gradient(880px 320px at 50% -70px, rgba(216,166,87,0.1), transparent 72%),
+      radial-gradient(130% 90% at 50% 38%, transparent 52%, rgba(0,0,0,0.42) 100%),
+      radial-gradient(1200px 520px at 50% 118%, rgba(0,0,0,0.65), transparent 70%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.014) 0 1px, transparent 1px 132px),
+      linear-gradient(180deg, #0a0a0b 0%, #070708 58%, #050506 100%);
+  }
+  .shelf-list { padding-top: 4px; }
+  .shelf { margin: 20px 0 26px; }
+  .shelf-head { display: flex; align-items: center; gap: 8px; padding: 0 2px 8px; }
+  .shelf-dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,255,255,0.03); }
+  .shelf-title { font-size: 11px; font-weight: 600; color: #d6d2ca; letter-spacing: 0.02em; }
+  .shelf-count { font-family: var(--mono); font-size: 8.5px; color: var(--faint); }
+  .shelf-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+  .shelf-body {
+    position: relative;
+    padding: 14px 10px 0;
+    border-radius: 3px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.022), transparent 42%),
+      radial-gradient(120% 90% at 50% -30%, rgba(216,166,87,0.055), transparent 68%),
+      linear-gradient(180deg, #0b0b0d 0%, #08080a 68%, #060607 100%);
+    box-shadow:
+      inset 0 12px 20px -14px rgba(0,0,0,0.95),
+      inset 0 1px 0 rgba(255,255,255,0.035),
+      inset 0 -1px 0 rgba(0,0,0,0.7);
+  }
+  .shelf-body::after {
+    content: "";
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    top: 0;
+    height: 72%;
+    background: radial-gradient(62% 100% at 50% 0%, rgba(216,166,87,0.06), transparent 72%);
+    pointer-events: none;
+  }
+  .shelf-track {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    min-height: 176px;
+    padding: 0 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .shelf-track::-webkit-scrollbar { display: none; }
+  .shelf-track.has-overflow {
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 30px), transparent 100%);
+  }
+  .spine {
+    --w: 30px;
+    --tilt: 0deg;
+    position: relative;
+    flex: 0 0 var(--w);
+    width: var(--w);
+    height: var(--h, 128px);
+    padding: 12px 0 14px;
+    border-radius: 2px 2px 1px 1px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 26%, rgba(0,0,0,0.16) 74%, rgba(0,0,0,0.34) 100%),
+      linear-gradient(90deg, rgba(255,255,255,0.13) 0 1px, rgba(255,255,255,0.04) 1px 3px, transparent 3px calc(100% - 2px), rgba(0,0,0,0.55) 100%),
+      linear-gradient(90deg, color-mix(in srgb, var(--tone) 32%, #171a1f) 0%, color-mix(in srgb, var(--tone) 17%, #101216) 48%, #0b0d10 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.11),
+      inset 0 -2px 0 rgba(0,0,0,0.55),
+      0 9px 15px -7px rgba(0,0,0,0.85);
+    color: rgba(255,255,255,0.74);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    transform: rotate(var(--tilt));
+    transform-origin: bottom center;
+    transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, color 0.2s ease;
+  }
+  /* 书头布带 */
+  .spine::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    height: 4px;
+    border-radius: 1px;
+    background: repeating-linear-gradient(90deg, var(--tone) 0 2px, rgba(255,255,255,0.3) 2px 4px);
+    opacity: 0.28;
+    pointer-events: none;
+  }
+  /* 书脚烫金细线 */
+  .spine::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 7px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(216,166,87,0.5), transparent);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .spine:hover, .spine.is-selected {
+    transform: translateY(-10px) rotate(calc(var(--tilt) - 0.5deg));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.2),
+      inset 0 -2px 0 rgba(0,0,0,0.5),
+      0 16px 24px -10px rgba(0,0,0,0.9),
+      0 0 0 1px color-mix(in srgb, var(--tone) 55%, transparent);
+    color: #fff;
+  }
+  .spine.is-selected::after {
+    height: 2px;
+    bottom: 6px;
+    background: var(--accent);
+    opacity: 0.95;
+  }
+  .spine-band {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 19%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(216,166,87,0.55), transparent);
+    opacity: 0.65;
+    pointer-events: none;
+  }
+  .spine-title {
+    max-height: calc(var(--h, 128px) - 30px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    letter-spacing: 0.055em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.65);
+  }
+  .spine-mark {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    writing-mode: vertical-rl;
+    font-family: var(--mono);
+    font-size: 6.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--tone) 55%, #ffffff 20%);
+    opacity: 0.42;
+    max-height: 44px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  /* 书架板 */
+  .shelf-board {
+    position: relative;
+    height: 14px;
+    margin: 0 -10px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #2b2219 0%, #201a14 12%, #15100d 48%, #0d0a08 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,206,150,0.13),
+      inset 0 -1px 0 rgba(0,0,0,0.85),
+      0 14px 22px -8px rgba(0,0,0,0.9);
+  }
+  .shelf-board::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,205,150,0.2) 10%, rgba(255,205,150,0.16) 90%, transparent);
+  }
+  .shelf-board::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 100%;
+    height: 16px;
+    background: radial-gradient(58% 100% at 50% 0%, rgba(0,0,0,0.6), transparent 72%);
+    pointer-events: none;
+  }
+  .shelf-more {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  }
+  .shelf-more:hover {
+    border-color: rgba(216,166,87,0.42);
+    background: rgba(216,166,87,0.08);
+    color: var(--accent);
+  }
+
+  /* ---------- 索引卡 ---------- */
+  .card-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    z-index: 40;
+    width: min(360px, calc(100vw - 36px));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 24px;
+    pointer-events: none;
+  }
+  /* 点开（固定）后，卡片改为停靠在右侧一列，把书架挤到左边，不再遮住任何书 */
+  .card-panel.side-left {
+    left: 0;
+    right: auto;
+    padding-left: 24px;
+    padding-right: 0;
+    justify-content: flex-start;
+  }
+  .card-panel.side-left .index-card { transform: translateY(12px) rotate(0.55deg); }
+  .card-panel.side-left.is-visible .index-card { transform: translateY(0) rotate(0); }
+  .card-panel.is-docked {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    padding: 18px 20px 18px 0;
+    align-items: flex-start;
+    justify-content: flex-end;
+    pointer-events: auto;
+    border-left: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), transparent 38%);
+  }
+  .card-panel.is-docked .index-card {
+    width: 100%;
+    max-height: 100%;
+    transform: translateY(0) rotate(0);
+  }
+  .card-panel.is-docked::after {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 0;
+    bottom: 0;
+    width: 26px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent);
+    pointer-events: none;
+  }
+  .index-card {
+    position: relative;
+    width: 100%;
+    max-height: calc(100dvh - 48px);
+    overflow: auto;
+    padding: 20px 20px 18px;
+    border: 1px solid var(--card-line);
+    border-radius: 14px;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgba(216,166,87,0.06), transparent 62%),
+      linear-gradient(180deg, #191d23, #101317 72%);
+    color: var(--card-ink);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.66),
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 0 0 1px rgba(0,0,0,0.35);
+    opacity: 0;
+    transform: translateY(12px) rotate(-0.55deg);
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22,1,0.36,1);
+    pointer-events: none;
+  }
+  .card-panel.is-visible .index-card { opacity: 1; transform: translateY(0) rotate(0); }
+  /* 悬停预览纯展示，不拦鼠标；只有点开后停靠的卡片才可交互 */
+  .card-panel.is-docked.is-visible .index-card { pointer-events: auto; }
+  .index-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: linear-gradient(90deg, rgba(216,166,87,0), #d8a657 18%, #f2d29a 50%, #d8a657 82%, rgba(216,166,87,0));
+    box-shadow: 0 0 14px rgba(216,166,87,0.32);
+  }
+  .index-card::-webkit-scrollbar { width: 6px; }
+  .index-card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
+
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-kicker { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.2em; color: rgba(216,166,87,0.78); }
+  .card-close {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    color: #8f959e;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+  }
+  .card-close:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); color: #f2f1ec; }
+  .card-close svg { width: 12px; height: 12px; }
+
+  .card-favicon {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    margin: 16px 0 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.055);
+    overflow: hidden;
+    color: #cfd4db;
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .card-favicon img { position: absolute; width: 24px; height: 24px; object-fit: contain; }
+  .card-title {
+    margin: 0 0 8px;
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    letter-spacing: 0;
+    font-weight: 600;
+    color: #f2f1ec;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+  .card-domain { font-family: var(--mono); font-size: 10px; letter-spacing: 0.02em; color: var(--card-muted); overflow-wrap: anywhere; }
+  .card-rule { height: 1px; margin: 16px 0; background: linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.03)); }
+  .card-summary { margin: 0 0 16px; font-size: 12.5px; line-height: 1.8; color: #b7bcc3; text-wrap: pretty; }
+  .card-meta { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: center; gap: 9px 12px; font-size: 11px; }
+  .meta-key { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; color: #6c727b; }
+  .meta-val { color: #c4c9d0; overflow-wrap: anywhere; }
+  .card-url { font-family: var(--mono); font-size: 10px; line-height: 1.6; color: #7d848d; }
+  .card-cat {
+    width: 100%;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 7px;
+    background: rgba(255,255,255,0.045);
+    color: #d7dbe1;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 0.16s ease, background 0.16s ease;
+  }
+  .card-cat:hover { background: rgba(255,255,255,0.075); }
+  .card-cat:focus { outline: none; border-color: rgba(216, 166, 87, 0.75); }
+  .card-cat option { background: #14171c; color: #e8e6e1; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .card-tags:empty { display: none; }
+  .tag {
+    padding: 3px 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    color: #9aa0a8;
+    font-size: 9.5px;
+    white-space: nowrap;
+  }
+  .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+  .btn {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease, color 0.16s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary {
+    background: linear-gradient(180deg, #e6bd74, #cf9b42);
+    color: #1d1710;
+    box-shadow: 0 6px 18px rgba(216,166,87,0.18);
+  }
+  .btn-primary:hover { background: linear-gradient(180deg, #f0ca85, #d9a54c); }
+  .btn-ghost { border-color: rgba(255,255,255,0.14); background: rgba(255,255,255,0.035); color: #c9ced6; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.22); color: #f0efe9; }
+  .card-subactions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+  }
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #868d96;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: color 0.16s ease;
+  }
+  .link-btn:hover { color: var(--accent); }
+  .link-btn svg { width: 11px; height: 11px; }
+
+  .statusbar {
+    flex: 0 0 auto;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 28px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.01em;
+    color: #9aa1a9;
+  }
+  .status-right { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #statusRight { color: #b6bec7; font-size: 12px; letter-spacing: 0.02em; }
+  #statusRight b { font-weight: 600; color: #e6eaee; }
+  #statusLeft { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .status-actions { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .status-refresh {
+    flex: 0 0 auto;
+    padding: 4px 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.03);
+    color: #a9b0b8;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  }
+  .status-refresh:hover { background: rgba(216,166,87,0.10); }
+  .status-refresh:hover { border-color: rgba(216,166,87,0.45); color: var(--accent); }
+  .status-refresh.is-busy { color: var(--accent); border-color: rgba(216,166,87,0.45); }
+  .build-tag {
+    flex: 0 0 auto;
+    padding: 3px 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: #8d949d;
+    white-space: nowrap;
+  }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(216,166,87,0.07); }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    z-index: 80;
+    padding: 8px 13px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px;
+    background: #1b1a17;
+    color: #f4f0e6;
+    font-size: 11px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    opacity: 0;
+    transform: translate(-50%, 8px);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+  /* 卡片停靠后内容区变窄，索引表退回到 5 列（隐藏摘要列） */
+  @media (min-width: 1180px) and (max-width: 1564px) {
+    .main.has-card .index-head,
+    .main.has-card .index-row { grid-template-columns: 34px minmax(0, 1fr) 132px 78px 22px; }
+    .main.has-card .index-head span.h-summary,
+    .main.has-card .row-summary { display: none; }
+    .main.has-card .index-head .h-time { text-align: right; }
+  }
+
+  @media (max-width: 1180px) {
+    .main.has-card .body { grid-template-columns: minmax(0, 1fr) 0px; }
+    .card-panel.is-docked {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: auto;
+      width: min(360px, calc(100vw - 36px));
+      padding: 24px;
+      align-items: center;
+      border-left: 0;
+      background: none;
+    }
+    .card-panel.is-docked::after { display: none; }
+    .card-panel.is-docked .index-card { max-height: calc(100dvh - 48px); }
+  }
+
+  @media (max-width: 980px) {
+    .app { grid-template-columns: 184px minmax(0, 1fr); }
+    .topbar { grid-template-columns: 1fr auto; gap: 14px; }
+    .search { grid-column: 1 / -1; grid-row: 2; }
+    .view-switch { align-self: end; }
+    .index-head, .index-row { grid-template-columns: 34px minmax(0, 1fr) 118px 76px 20px; }
+  }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; }
+    .rail { display: none; }
+    .topbar { grid-template-columns: 1fr auto; padding: 18px 18px 14px; }
+    .content { padding: 0 18px 24px; }
+    .index-head, .index-row { grid-template-columns: 30px minmax(0, 1fr) 78px 20px; column-gap: 9px; }
+    .index-head span:nth-child(3), .row-cat { display: none; }
+    .index-head span:nth-child(4), .row-time { display: none; }
+    .card-panel { width: 100%; align-items: flex-end; padding: 12px; }
+    .index-card { max-height: 72dvh; }
+    .statusbar { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <ellipse cx="16" cy="16" rx="12.8" ry="5.2" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="1.5" opacity="0.92"></ellipse>
+            <ellipse cx="16" cy="16" rx="5.2" ry="12.8" transform="rotate(-28 16 16)" stroke="currentColor" stroke-width="1.1" opacity="0.42"></ellipse>
+            <circle cx="16" cy="16" r="3.3" fill="currentColor"></circle>
+            <circle cx="16" cy="16" r="6.2" stroke="currentColor" stroke-width="0.7" opacity="0.30"></circle>
+            <circle cx="25.7" cy="12.4" r="1.5" fill="currentColor"></circle>
+            <path d="M25.4 3.6l1.05 2.75 2.75 1.05-2.75 1.05-1.05 2.75-1.05-2.75-2.75-1.05 2.75-1.05z" fill="currentColor" opacity="0.95"></path>
+            <circle cx="6.2" cy="24.8" r="1.1" fill="currentColor" opacity="0.55"></circle>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <strong>星河书签</strong>
+          <span>STARLINE / INDEX</span>
+        </div>
+      </div>
+      <div class="rail-head">
+        <span class="rail-label">分类</span>
+        <button class="rail-plus" id="railAddRoot" type="button" title="新建顶级分类" aria-label="新建顶级分类">＋</button>
+      </div>
+      <label class="rail-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path>
+        </svg>
+        <input id="railCatSearch" type="text" placeholder="筛选分类" autocomplete="off" spellcheck="false" aria-label="筛选分类">
+        <button class="rail-search-clear" id="railCatSearchClear" type="button" hidden aria-label="清空筛选">×</button>
+      </label>
+      <nav class="tabs" id="categoryTabs" aria-label="收藏分类"></nav>
+      <div class="rail-menu" id="railMenu" hidden>
+        <button type="button" data-menu="child">新建子分类<kbd>＋</kbd></button>
+        <button type="button" data-menu="rename">重命名<kbd>双击</kbd></button>
+        <button type="button" data-menu="up">上移</button>
+        <button type="button" data-menu="down">下移</button>
+        <button type="button" data-menu="delete" class="is-danger">删除分类</button>
+      </div>
+      <div class="rail-foot">
+        <div class="rail-note"><span class="pulse"></span><span id="railCount">—</span> 条书签</div>
+        <div class="rail-hint">⌘K 搜索 · ESC 关闭</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="heading">
+          <div class="eyebrow">BOOKMARKS / <span id="viewEyebrow">INDEX</span></div>
+          <h1 id="pageTitle">全部收藏</h1>
+          <p id="pageSubtitle">正在读取书签…</p>
+        </div>
+
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-4-4"></path>
+          </svg>
+          <input id="searchInput" type="text" placeholder="搜索标题、域名、标签…" autocomplete="off" spellcheck="false">
+          <kbd>⌘ K</kbd>
+        </label>
+
+        <div class="view-switch" role="tablist" aria-label="视图切换">
+          <button class="view-btn is-active" data-view="index" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+              <path d="M8 6h12M8 12h12M8 18h12"></path>
+              <circle cx="4" cy="6" r="1"></circle><circle cx="4" cy="12" r="1"></circle><circle cx="4" cy="18" r="1"></circle>
+            </svg>
+            索引
+          </button>
+          <button class="view-btn" data-view="shelf" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h4v16H4zM10 4h4v16h-4zM16 4h4v16h-4z"></path>
+            </svg>
+            书脊
+          </button>
+        </div>
+      </header>
+
+      <div class="body">
+      <div class="content" id="content">
+        <section id="indexView" class="view">
+          <div class="index-head">
+            <span></span><span>收藏</span><span class="h-summary">摘要</span><span>分类</span><span class="h-time">添加时间</span><span></span>
+          </div>
+          <div id="indexList" class="index-list"></div>
+          <div id="emptyState" class="empty hidden">
+            <strong>没有找到匹配的收藏</strong>
+            <span>换一个关键词，或者切换到其他分类看看。</span>
+          </div>
+        </section>
+
+        <section id="shelfView" class="view hidden">
+          <div id="shelfList" class="shelf-list"></div>
+          <div id="shelfEmpty" class="empty hidden">
+            <strong>这一层书架是空的</strong>
+            <span>换一个关键词，或者切换到其他分类看看。</span>
+          </div>
+        </section>
+      </div>
+
+        <aside id="cardPanel" class="card-panel" aria-live="polite">
+          <article class="index-card" id="indexCard"></article>
+        </aside>
+      </div>
+
+      <footer class="statusbar">
+        <span id="statusLeft">—</span>
+        <span class="status-actions">
+          <span class="build-tag" id="buildTag" title="面板构建时间">—</span>
+          <button class="status-refresh" id="enrichBtn" hidden title="让模型给还没有简介的收藏补一句人话简介">补齐简介</button>
+          <span class="status-right" id="statusRight"><span class="status-dot"></span> 本地书签 · 只读</span>
+          <button class="status-refresh" id="refreshBtn" title="重新读取浏览器书签">刷新</button>
+        </span>
+      </footer>
+    </main>
+
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+<script>
+  const PANEL_BUILD = "2026-11-08 21:45";
+
+  let DATA = [];
+  let META = { sources: [], builtAt: 0 };
+  let loaded = false;
+
+  /** 分类：宿主下发的 [{id,name,color,order,parentId,custom}]，这里整理成树 */
+  let CATS = [];
+  let MANUAL = false;
+  let FOLDER_MAP = {};
+  const CAT_BY_ID = new Map();
+  let CAT_CHILDREN = new Map();
+  const CAT_TOTAL = new Map();
+  const CAT_SUBTREE = new Map();
+  const catCollapsed = new Set();
+  let cmAddParent = "";
+  /* 左栏分类树状态：筛选词、正在新建的父级、正在重命名的分类、菜单指向的分类 */
+  let railQuery = "";
+  let railAdding = false;
+  let railAddParent = "";
+  let railEditingId = "";
+  let railRenamePending = "";
+  let railMenuCat = "";
+  const CATEGORY_PALETTE = ["#9b8afb", "#6fbf9b", "#d8a657", "#6c9bd1", "#c98a9b", "#69b8b3", "#b08bd6", "#d08a5a", "#7f9c6a", "#8a8f98"];
+
+  const ICONS = {
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"></path></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"></path></svg>',
+    pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>',
+  };
+
+  const state = {
+    view: "index",
+    category: "all",
+    query: "",
+    selectedId: null,
+    previewId: null,
+    previewSide: "right",
+  };
+
+  let folderTreeCache = null;
+
+  const SHELF_LIMIT = 60;
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[char]));
+
+  const escapeAttr = (value) => escapeHTML(value).replace(/`/g, "&#96;");
+
+  function hostOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); }
+    catch { return ""; }
+  }
+
+  function categoryMeta(id) {
+    const key = String(id || "");
+    const cat = CAT_BY_ID.get(key);
+    if (cat) return { id: cat.id, name: cat.name, color: cat.color };
+    const byName = CATS.find((c) => c.name === key);
+    if (byName) return { id: byName.id, name: byName.name, color: byName.color };
+    return { id: "", name: "未分类", color: "#6a7078" };
+  }
+
+  function isRecent(item) {
+    if (item.added) return Date.now() - item.added <= 30 * 86400000;
+    const text = String(item.time || "").trim();
+    if (!text) return false;
+    if (text === "今天" || text === "昨天" || text === "刚刚") return true;
+    let match = text.match(/^(\d+)\s*天前$/);
+    if (match) return Number(match[1]) <= 30;
+    match = text.match(/^(\d+)\s*个月前$/);
+    if (match) return Number(match[1]) <= 1;
+    return false;
+  }
+
+  const ROOT_NAMES = ["书签栏", "其他书签", "移动设备书签"];
+
+  function folderParts(folder) {
+    return String(folder || "")
+      .split(" / ")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .filter((part) => !ROOT_NAMES.includes(part));
+  }
+
+  function normalizeItem(raw, index) {
+    const url = String(raw.url || "");
+    const domain = String(raw.domain || hostOf(url) || "");
+    const titleText = String(raw.title || raw.shortName || "").replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g, "").trim();
+    const title = titleText || domain || url || "未命名收藏";
+    const rawId = String(raw.categoryId || "");
+    const known = CAT_BY_ID.get(rawId);
+    const categoryId = known ? rawId : "";
+    const category = known ? known.name : String(raw.category || raw.subLabel || "未分类");
+    const catNames = new Set(CATS.map((cat) => cat.name));
+    const summary = String(raw.desc || raw.summary || "");
+    const folder = String(raw.folder || "");
+    const parts = folderParts(folder);
+    let tags = Array.isArray(raw.tags) ? raw.tags : (Array.isArray(raw.aiTakeaways) ? raw.aiTakeaways : []);
+    tags = tags
+      .map((tag) => String(tag).trim())
+      .filter(Boolean)
+      .filter((tag) => tag !== summary && tag !== title && tag !== domain)
+      .filter((tag) => !catNames.has(tag));
+    if (!tags.length && raw.badge && raw.badge !== domain && !String(raw.badge).includes(".")) tags = [raw.badge];
+    return {
+      id: String(raw.id != null ? raw.id : index + 1),
+      title: title,
+      url: url,
+      domain: domain,
+      category: category,
+      categoryId: categoryId,
+      summary: summary,
+      folder: folder,
+      folderParts: parts,
+      tags: [...new Set(tags)].slice(0, 4),
+      time: String(raw.time || ""),
+      added: Number(raw.added || 0),
+      source: String(raw.source || "Chrome"),
+      inbox: Boolean(raw.inbox),
+    };
+  }
+
+  function getCounts() {
+    const counts = { all: DATA.length, recent: 0, [UNASSIGNED]: 0 };
+    for (const item of DATA) {
+      if (isRecent(item)) counts.recent += 1;
+      if (!item.categoryId) counts[UNASSIGNED] += 1;
+      else counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
+    }
+    return counts;
+  }
+
+  /* ---------- 分类模型 ---------- */
+
+  /** 未分类在导航里的伪 id */
+  const UNASSIGNED = "__unassigned__";
+
+  function syncCategories(defs, manual, folderMap) {
+    // 只认用户自己建的分类：默认 AI 分类不再出现在导航里，左栏是空模板
+    const flat = (Array.isArray(defs) ? defs : [])
+      .filter((raw) => raw && raw.custom !== false)
+      .map((raw, index) => ({
+      id: String(raw.id || `cat-${index}`),
+      name: String(raw.name || "未命名分类"),
+      color: String(raw.color || CATEGORY_PALETTE[index % CATEGORY_PALETTE.length]),
+      order: Number.isFinite(Number(raw.order)) ? Number(raw.order) : index,
+      parentId: String(raw.parentId || ""),
+      custom: raw.custom !== false,
+      depth: 0,
+    }));
+    CAT_BY_ID.clear();
+    flat.forEach((cat) => CAT_BY_ID.set(cat.id, cat));
+    // 父级不存在就挂回顶层，避免脏数据把节点藏起来
+    flat.forEach((cat) => { if (cat.parentId && !CAT_BY_ID.has(cat.parentId)) cat.parentId = ""; });
+
+    const children = new Map();
+    for (const cat of flat) {
+      const key = cat.parentId || "";
+      if (!children.has(key)) children.set(key, []);
+      children.get(key).push(cat);
+    }
+    for (const list of children.values()) {
+      list.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, "zh"));
+    }
+
+    const ordered = [];
+    const seen = new Set();
+    (function walk(parentId, depth) {
+      for (const cat of children.get(parentId) || []) {
+        if (seen.has(cat.id)) continue;
+        seen.add(cat.id);
+        cat.depth = depth;
+        ordered.push(cat);
+        walk(cat.id, depth + 1);
+      }
+    })("", 0);
+    // 环状数据兜底：没走到的节点按顶层补上
+    for (const cat of flat) {
+      if (!seen.has(cat.id)) {
+        cat.parentId = "";
+        cat.depth = 0;
+        ordered.push(cat);
+      }
+    }
+
+    CATS = ordered;
+    CAT_CHILDREN = children;
+    MANUAL = Boolean(manual);
+    FOLDER_MAP = folderMap && typeof folderMap === "object" ? folderMap : {};
+  }
+
+  function categoryChildren(id) {
+    return CAT_CHILDREN.get(id) || [];
+  }
+
+  function categoryPath(cat, sep) {
+    const parts = [];
+    let node = cat;
+    let guard = 0;
+    while (node && guard < 12) {
+      parts.unshift(node.name);
+      node = node.parentId ? CAT_BY_ID.get(node.parentId) : null;
+      guard += 1;
+    }
+    return parts.join(sep || " / ");
+  }
+
+  function categoryDescendants(id) {
+    const out = [id];
+    for (const child of categoryChildren(id)) out.push(...categoryDescendants(child.id));
+    return out;
+  }
+
+  /** 父级被折叠时，子级不出现在导航里 */
+  function categoryHidden(cat) {
+    let parentId = cat.parentId;
+    let guard = 0;
+    while (parentId && guard < 12) {
+      if (catCollapsed.has(parentId)) return true;
+      const parent = CAT_BY_ID.get(parentId);
+      parentId = parent ? parent.parentId : "";
+      guard += 1;
+    }
+    return false;
+  }
+
+  /** 每个分类的「含子分类」总数，以及子树 id 集合 */
+  function computeCategoryStats() {
+    const direct = new Map();
+    for (const item of DATA) {
+      if (item.categoryId) direct.set(item.categoryId, (direct.get(item.categoryId) || 0) + 1);
+    }
+    CAT_TOTAL.clear();
+    CAT_SUBTREE.clear();
+    for (const cat of CATS) {
+      const ids = categoryDescendants(cat.id);
+      CAT_SUBTREE.set(cat.id, new Set(ids));
+      let total = 0;
+      for (const id of ids) total += direct.get(id) || 0;
+      CAT_TOTAL.set(cat.id, total);
+    }
+  }
+
+  /** 文件夹 → 分类 的映射，父文件夹可继承 */
+  function folderMappedId(folder) {
+    const parts = String(folder || "").split(" / ").map((p) => p.trim()).filter(Boolean);
+    for (let i = parts.length; i > 0; i -= 1) {
+      const value = FOLDER_MAP[parts.slice(0, i).join(" / ")];
+      if (value && CAT_BY_ID.has(value)) return value;
+    }
+    return "";
+  }
+
+  /* ---------- 浏览器文件夹树（归类用） ---------- */
+
+  function buildFolderTree() {
+    if (folderTreeCache) return folderTreeCache;
+    const root = { name: "", path: [], full: "", count: 0, direct: 0, children: new Map() };
+    for (const item of DATA) {
+      root.count += 1;
+      // 用原始路径（含 书签栏 / 其他书签 根名），这样映射键和宿主完全一致
+      const parts = String(item.folder || "").split(" / ").map((p) => p.trim()).filter(Boolean);
+      let node = root;
+      for (const part of parts) {
+        let child = node.children.get(part);
+        if (!child) {
+          const path = node.path.concat(part);
+          child = { name: part, path, full: path.join(" / "), count: 0, direct: 0, children: new Map() };
+          node.children.set(part, child);
+        }
+        child.count += 1;
+        node = child;
+      }
+      node.direct += 1;
+    }
+    folderTreeCache = root;
+    return root;
+  }
+
+  function getFiltered() {
+    const query = state.query.trim().toLowerCase();
+    const scope = state.category !== "all" && state.category !== "recent" && state.category !== UNASSIGNED
+      ? CAT_SUBTREE.get(state.category) || new Set([state.category])
+      : null;
+    return DATA.filter((item) => {
+      if (state.category === "recent") {
+        if (!isRecent(item)) return false;
+      } else if (state.category === UNASSIGNED) {
+        if (item.categoryId) return false;
+      } else if (scope) {
+        if (!item.categoryId || !scope.has(item.categoryId)) return false;
+      }
+      if (!query) return true;
+      return [item.title, item.domain, item.summary, item.category, item.folder, ...(item.tags || [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+  }
+
+  /** 分类栏溢出时底部加渐隐，提示还能往下滚。 */
+  function markRailOverflow() {
+    const tabs = $("#categoryTabs");
+    if (tabs) tabs.classList.toggle("is-overflow", tabs.scrollHeight > tabs.clientHeight + 1);
+  }
+
+  /* ---------- 分类设计面板 ---------- */
+
+  const CATEGORY_PALETTE_UI = ["#9b8afb", "#6fbf9b", "#d8a657", "#6c9bd1", "#c98a9b", "#69b8b3", "#b08bd6", "#d08a5a", "#7f9c6a", "#8a8f98"];
+  let cmExpanded = new Set(["书签栏"]);
+  let cmBusy = false;
+
+  async function hostPost(path, body) {
+    const response = await fetch(`../${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body || {}),
+    });
+    if (!response.ok) throw new Error(`${path} → HTTP ${response.status}`);
+    return response.json().catch(() => ({}));
+  }
+
+  async function mutate(path, body, message) {
+    if (cmBusy) return false;
+    cmBusy = true;
+    try {
+      await hostPost(path, body);
+      await directFetch(true);
+      if (message) showToast(message);
+      return true;
+    } catch (error) {
+      showToast(window.parent && window.parent !== window ? `保存失败：${error.message}` : "预览模式不能保存");
+      return false;
+    } finally {
+      cmBusy = false;
+    }
+  }
+
+  function openCatManager() {
+    const root = $("#catManager");
+    if (!root) return;
+    root.hidden = false;
+    document.body.classList.add("cm-open");
+    renderCatManager();
+  }
+
+  function closeCatManager() {
+    const root = $("#catManager");
+    if (root) root.hidden = true;
+    document.body.classList.remove("cm-open");
+  }
+
+  function renderCatManager() {
+    renderCmCats();
+    renderCmFolders();
+    const stat = $("#cmStat");
+    if (stat) {
+      const assigned = DATA.filter((item) => item.categoryId).length;
+      stat.textContent = `${MANUAL ? "我的分类模式" : "尚未建分类"} · 已归类 ${assigned} / ${DATA.length} · 未分类 ${DATA.length - assigned}`;
+    }
+    const total = $("#cmCatTotal");
+    if (total) total.textContent = `${CATS.length} 个`;
+  }
+
+  function renderCmCats() {
+    const list = $("#cmCatList");
+    if (!list) return;
+    renderCmParentChip();
+    if (!CATS.length) {
+      list.innerHTML = '<div class="cm-empty">还没有分类。<br>在下面输入一个名字，比如「AI 工具」「影视」「服务器」，回车创建。</div>';
+      return;
+    }
+    const visible = CATS.filter((cat) => !categoryHidden(cat));
+    list.innerHTML = visible.map((cat) => {
+      const kids = categoryChildren(cat.id);
+      const open = kids.length > 0 && !catCollapsed.has(cat.id);
+      const siblings = CAT_CHILDREN.get(cat.parentId || "") || [];
+      const index = siblings.findIndex((c) => c.id === cat.id);
+      return `
+      <div class="cm-cat" data-id="${escapeAttr(cat.id)}" data-depth="${cat.depth}" style="padding-left:${6 + cat.depth * 14}px;--d:${cat.depth}">
+        <span class="cm-caret ${kids.length ? "" : "is-leaf"} ${open ? "is-open" : ""}" ${kids.length ? 'data-cm="toggle"' : ""}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"></path></svg>
+        </span>
+        <button class="cm-swatch" type="button" data-cm="color" style="--c:${escapeAttr(cat.color)}" title="点击换颜色"></button>
+        <input class="cm-name" data-cm="rename" value="${escapeAttr(cat.name)}" maxlength="20" aria-label="分类名">
+        <span class="cm-count" title="含子分类共 ${CAT_TOTAL.get(cat.id) || 0} 条">${CAT_TOTAL.get(cat.id) || 0}</span>
+        <button class="cm-add-child" type="button" data-cm="child" title="在它下面建子分类">＋</button>
+        <button class="cm-icon" type="button" data-cm="up" title="上移" ${index <= 0 ? "disabled" : ""}>↑</button>
+        <button class="cm-icon" type="button" data-cm="down" title="下移" ${index === siblings.length - 1 ? "disabled" : ""}>↓</button>
+        <button class="cm-icon is-danger" type="button" data-cm="del" title="删除分类">×</button>
+      </div>
+    `;
+    }).join("");
+  }
+
+  function renderCmParentChip() {
+    const chip = $("#cmParentChip");
+    if (!chip) return;
+    const parent = cmAddParent ? CAT_BY_ID.get(cmAddParent) : null;
+    if (!parent) {
+      cmAddParent = "";
+      chip.hidden = true;
+      chip.innerHTML = "";
+      return;
+    }
+    chip.hidden = false;
+    chip.innerHTML = `将在 <b>${escapeHTML(categoryPath(parent))}</b> 下创建<button type="button" data-cm="clear-parent" title="取消">×</button>`;
+  }
+
+  function flattenCmFolders(node, depth, rows) {
+    const kids = [...node.children.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));
+    for (const child of kids) {
+      const hasKids = child.children.size > 0;
+      const open = cmExpanded.has(child.full);
+      rows.push({ node: child, depth, hasKids, open });
+      if (hasKids && open) flattenCmFolders(child, depth + 1, rows);
+    }
+    return rows;
+  }
+
+  function renderCmFolders() {
+    const list = $("#cmFolderList");
+    if (!list) return;
+    if (!CATS.length) {
+      list.innerHTML = '<div class="cm-empty">先建至少一个分类，这里才会出现可选的归类目标。</div>';
+      return;
+    }
+    const root = buildFolderTree();
+    const rows = flattenCmFolders(root, 0, []);
+    if (root.direct > 0) {
+      rows.push({ node: { name: "（书签栏根目录）", full: "__root__", count: root.direct, children: new Map() }, depth: 0, hasKids: false, open: false });
+    }
+    list.innerHTML = rows.map(({ node, depth, hasKids, open }) => {
+      const mapped = node.full === "__root__" ? "" : folderMappedId(node.full);
+      const options = [`<option value="">未分类</option>`]
+        .concat(CATS.map((cat) => `<option value="${escapeAttr(cat.id)}" ${cat.id === mapped ? "selected" : ""}>${escapeHTML(cat.name)}</option>`))
+        .join("");
+      return `
+        <div class="cm-folder ${mapped ? "has-map" : ""}" data-folder="${escapeAttr(node.full)}" style="padding-left:${6 + depth * 12}px">
+          <span class="cm-caret ${hasKids ? "" : "is-leaf"} ${open ? "is-open" : ""}" ${hasKids ? 'data-cm="toggle"' : ""}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"></path></svg>
+          </span>
+          <span class="cm-fname" title="${escapeAttr(node.full)}">${escapeHTML(node.name)}</span>
+          <span class="cm-fcount">${node.count}</span>
+          <select class="cm-select" data-cm="assign" ${node.full === "__root__" ? "disabled" : ""} aria-label="归到哪个分类">${options}</select>
+        </div>
+      `;
+    }).join("");
+    const allOpen = rows.filter((row) => row.hasKids).every((row) => row.open);
+    const toggle = $("#cmExpandAll");
+    if (toggle) toggle.textContent = allOpen ? "全部收起" : "全部展开";
+  }
+
+  const SYS_ICONS = {
+    layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.6 8.4 4.2-8.4 4.2L3.6 7.8z"></path><path d="m3.6 12.4 8.4 4.2 8.4-4.2"></path><path d="m3.6 16.6 8.4 4.2 8.4-4.2"></path></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"></circle><path d="M12 7.6V12l3 1.8"></path></svg>',
+    hash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 4 7.6 20M16.4 4l-2 16M4.4 9h15.2M3.6 15h15.2"></path></svg>',
+  };
+
+  /** 筛选时：命中的分类 + 它们的祖先链都保留 */
+  function railMatches() {
+    const q = railQuery.trim().toLowerCase();
+    if (!q) return null;
+    const keep = new Set();
+    for (const cat of CATS) {
+      if (!cat.name.toLowerCase().includes(q)) continue;
+      keep.add(cat.id);
+      let parent = cat.parentId;
+      let guard = 0;
+      while (parent && guard++ < 64) {
+        keep.add(parent);
+        const node = CAT_BY_ID.get(parent);
+        parent = node ? node.parentId : "";
+      }
+    }
+    return keep;
+  }
+
+  function renderTabs() {
+    const counts = getCounts();
+    const activeId = state.category;
+    const keep = railMatches();
+    const rows = [
+      { kind: "sys", id: "all", name: "全部收藏", icon: "layers", count: counts.all, depth: 0 },
+      { kind: "sys", id: "recent", name: "最近添加", icon: "clock", count: counts.recent, depth: 0 },
+    ];
+    if (counts[UNASSIGNED] > 0) {
+      rows.push({ kind: "sys", id: UNASSIGNED, name: "未分类", icon: "hash", count: counts[UNASSIGNED], depth: 0 });
+    }
+    let catCount = 0;
+    for (const cat of CATS) {
+      if (keep) {
+        if (!keep.has(cat.id)) continue;
+      } else if (categoryHidden(cat)) {
+        continue;
+      }
+      catCount += 1;
+      const kids = categoryChildren(cat.id);
+      rows.push({
+        kind: "cat",
+        id: cat.id,
+        name: cat.name,
+        color: cat.color,
+        count: CAT_TOTAL.get(cat.id) || 0,
+        depth: cat.depth,
+        hasKids: kids.length > 0,
+        open: kids.length > 0 && (Boolean(keep) || !catCollapsed.has(cat.id)),
+        editing: railEditingId === cat.id,
+        editable: cat.custom !== false,
+      });
+    }
+    // 正在新建时，把输入行插到「该父级的最后一个后代」后面（顶级就插在最后）
+    if (railAdding) {
+      const parent = railAddParent ? CAT_BY_ID.get(railAddParent) : null;
+      const inputRow = { kind: "input", depth: parent ? parent.depth + 1 : 0 };
+      if (parent) {
+        const sub = CAT_SUBTREE.get(parent.id) || new Set([parent.id]);
+        let at = -1;
+        rows.forEach((row, index) => { if (row.kind === "cat" && sub.has(row.id)) at = index; });
+        if (at >= 0) rows.splice(at + 1, 0, inputRow);
+        else rows.push(inputRow);
+      } else {
+        rows.push(inputRow);
+      }
+    }
+    const nav = $("#categoryTabs");
+    const listHTML = rows.map((row) => {
+      const depth = row.depth || 0;
+      const indent = 10 + depth * 16;
+      if (row.kind === "input") {
+        return `<div class="tab tab-input" data-depth="${depth}" style="padding-left:${indent}px;--d:${depth}">
+          <span class="tab-icon dot" style="--c:#c9a768"></span>
+          <input class="tab-add-input" id="railAddInput" maxlength="20" placeholder="${railAddParent ? "子分类名，回车创建" : "主分类名，回车创建"}" aria-label="新分类名">
+        </div>`;
+      }
+      const active = activeId === row.id;
+      const attrs = `data-cat="${escapeAttr(row.id)}" data-depth="${depth}" title="${escapeAttr(row.name)}" style="padding-left:${indent}px;--d:${depth}"`;
+      if (row.kind === "sys") {
+        return `<button class="tab is-sys ${active ? "is-active" : ""}" ${attrs}>
+          <span class="tab-icon">${SYS_ICONS[row.icon]}</span>
+          <span class="tab-name">${escapeHTML(row.name)}</span>
+          <span class="tab-count">${row.count}</span>
+          <span class="tab-caret is-leaf"></span>
+        </button>`;
+      }
+      const caret = `<span class="tab-caret ${row.hasKids ? (row.open ? "is-open" : "") : "is-leaf"}" ${row.hasKids ? 'data-toggle="1"' : ""}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"></path></svg>
+        </span>`;
+      const name = row.editing
+        ? `<input class="tab-rename" data-rename="${escapeAttr(row.id)}" value="${escapeAttr(row.name)}" maxlength="20" aria-label="分类名">`
+        : `<span class="tab-name">${escapeHTML(row.name)}</span>`;
+      const tag = row.editing ? "div" : "button";
+      return `<${tag} class="tab is-cat ${row.hasKids ? "is-parent" : ""} ${active ? "is-active" : ""}" ${attrs}${row.editing ? ' role="button"' : ""}>
+          <span class="tab-icon dot" style="--c:${escapeAttr(row.color)}"></span>
+          ${name}
+          <span class="tab-count">${row.count}</span>
+          <span class="tab-act" data-act="menu" title="更多操作" aria-label="更多操作">⋯</span>
+          ${caret}
+        </${tag}>`;
+    }).join("");
+    const addRow = railAdding && !railAddParent
+      ? ""
+      : `<button class="tab tab-add" type="button" data-add="root" data-depth="0" style="padding-left:10px;--d:0">
+          <span class="tab-plus">＋</span>
+          <span class="tab-name">新建主分类</span>
+        </button>`;
+    const emptyHint = catCount || keep
+      ? ""
+      : `<div class="rail-empty">
+          <b>空模板</b>
+          <span>先建主分类，再在它下面建子目录。</span>
+          <span>点右上角 ⋯ 可以新建子分类、改名、调顺序。</span>
+        </div>`;
+    nav.innerHTML = listHTML + addRow + emptyHint;
+    if (railAdding) {
+      const input = $("#railAddInput");
+      if (input && document.activeElement !== input) input.focus();
+    }
+    if (railEditingId) {
+      const input = nav.querySelector(`[data-rename="${railEditingId}"]`);
+      if (input) {
+        railRenamePending = railEditingId;
+        input.focus();
+        input.select();
+      }
+    }
+    requestAnimationFrame(markRailOverflow);
+  }
+
+  function openRailAdd(parentId) {
+    const parent = parentId ? CAT_BY_ID.get(parentId) : null;
+    railAddParent = parent ? parent.id : "";
+    railAdding = true;
+    railEditingId = "";
+    railQuery = "";
+    const search = $("#railCatSearch");
+    if (search) search.value = "";
+    const clear = $("#railCatSearchClear");
+    if (clear) clear.hidden = true;
+    if (parent) {
+      // 展开整条祖先链，保证输入行可见
+      let node = parent;
+      let guard = 0;
+      while (node && guard++ < 64) {
+        catCollapsed.delete(node.id);
+        node = node.parentId ? CAT_BY_ID.get(node.parentId) : null;
+      }
+    }
+    renderTabs();
+  }
+
+  function closeRailAdd() {
+    railAdding = false;
+    railAddParent = "";
+    renderTabs();
+  }
+
+  async function createRailCat() {
+    const input = $("#railAddInput");
+    if (!input) return;
+    const name = input.value.trim();
+    if (!name) return;
+    const parentId = railAddParent;
+    const wasManual = MANUAL;
+    if (parentId) catCollapsed.delete(parentId);
+    const ok = await mutate(
+      "category/add",
+      { name, parentId },
+      wasManual ? (parentId ? "子分类已创建" : "分类已创建") : "",
+    );
+    if (!ok) return;
+    if (!wasManual) showToast("已切换到你自己的分类，AI 默认分类已收起");
+    renderTabs();
+  }
+
+  function startRailRename(id) {
+    const cat = CAT_BY_ID.get(id);
+    if (!cat) return;
+    if (cat.custom === false) {
+      showToast("默认分类改不了，先建一个自己的分类");
+      return;
+    }
+    railEditingId = id;
+    renderTabs();
+  }
+
+  async function commitRailRename(id, value) {
+    if (railRenamePending !== id) return;
+    railRenamePending = "";
+    railEditingId = "";
+    const cat = CAT_BY_ID.get(id);
+    const next = String(value || "").trim();
+    if (!cat || !next || next === cat.name) {
+      renderTabs();
+      return;
+    }
+    await mutate("category/update", { id, name: next }, "已重命名");
+  }
+
+  function openRailMenu(anchor, id) {
+    const menu = $("#railMenu");
+    const cat = CAT_BY_ID.get(id);
+    if (!menu || !cat) return;
+    railMenuCat = id;
+    const siblings = CAT_CHILDREN.get(cat.parentId || "") || [];
+    const index = siblings.findIndex((c) => c.id === id);
+    menu.querySelector('[data-menu="up"]').disabled = index <= 0;
+    menu.querySelector('[data-menu="down"]').disabled = index === siblings.length - 1;
+    menu.hidden = false;
+    const rect = anchor.getBoundingClientRect();
+    const width = menu.offsetWidth || 140;
+    const height = menu.offsetHeight || 152;
+    let left = rect.right - width;
+    let top = rect.bottom + 6;
+    if (top + height > window.innerHeight - 8) top = rect.top - height - 6;
+    menu.style.left = `${Math.max(8, Math.min(left, window.innerWidth - width - 8))}px`;
+    menu.style.top = `${Math.max(8, top)}px`;
+  }
+
+  function closeRailMenu() {
+    const menu = $("#railMenu");
+    if (menu) menu.hidden = true;
+    railMenuCat = "";
+  }
+
+  function faviconHTML(item, className) {
+    const letter = escapeHTML((item.title || item.domain || "?").trim().charAt(0).toUpperCase());
+    const host = encodeURIComponent(item.domain || "");
+    const src = `https://icons.duckduckgo.com/ip3/${host}.ico`;
+    const fallback = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    return `<div class="${className}"><span>${letter}</span><img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.dataset.fb?(this.remove()):(this.dataset.fb='1',this.src='${fallback}')"></div>`;
+  }
+
+  function rowHTML(item, index) {
+    const meta = categoryMeta(item.categoryId);
+    const catNode = meta.id ? CAT_BY_ID.get(meta.id) : null;
+    const catLabel = catNode && catNode.depth > 0 ? categoryPath(catNode, " › ") : meta.name;
+    return `
+      <div class="index-row ${state.selectedId === item.id ? "is-selected" : ""}" data-id="${escapeAttr(item.id)}" data-index="${index}" role="button" tabindex="0" aria-label="${escapeAttr(item.title)}">
+        ${faviconHTML(item, "row-favicon")}
+        <div class="row-main">
+          <div class="row-title">${escapeHTML(item.title)}${item.inbox ? '<span class="inbox-dot" title="未整理"></span>' : ""}</div>
+          <div class="row-domain">${escapeHTML(item.domain || item.url)}</div>
+        </div>
+        <div class="row-summary">${escapeHTML(item.summary || (item.folderParts.length ? item.folderParts.join(" / ") : "—"))}</div>
+        <div class="row-cat" title="${escapeAttr(catLabel)}">
+          <span class="cat-dot" style="background:${meta.color}"></span>
+          <span class="cat-name">${escapeHTML(catLabel)}</span>
+        </div>
+        <div class="row-time">${escapeHTML(item.time || "—")}</div>
+        <div class="row-arrow">${ICONS.arrow}</div>
+      </div>
+    `;
+  }
+
+  function spineHeight(item, index) {
+    const seed = (String(item.title).length * 7 + index * 13 + String(item.domain).length * 3) % 46;
+    return 112 + seed;
+  }
+
+  function spineWidth(item, index) {
+    const seed = (String(item.title).length * 3 + String(item.domain).length * 5 + index * 7) % 3;
+    return [28, 32, 37][seed];
+  }
+
+  function hexToHsl(hex) {
+    const value = String(hex || "#8a8f98").replace("#", "");
+    const full = value.length === 3 ? value.split("").map((c) => c + c).join("") : value;
+    const num = parseInt(full, 16);
+    const r = ((num >> 16) & 255) / 255;
+    const g = ((num >> 8) & 255) / 255;
+    const b = (num & 255) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    const d = max - min;
+    let h = 0;
+    let s = 0;
+    if (d) {
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return [h * 360, s * 100, l * 100];
+  }
+
+  /** 同一分类里每本书做一点点色相/明度偏移，避免整排像色卡。 */
+  function spineTone(hex, index) {
+    const [h, s, l] = hexToHsl(hex);
+    const seed = (index * 37 + 11) % 17;
+    const hue = (h + (seed % 5 - 2) * 7 + 360) % 360;
+    const sat = Math.max(16, Math.min(66, s + ((seed >> 2) % 3 - 1) * 7));
+    const light = Math.max(26, Math.min(58, l + ((seed >> 3) % 3 - 1) * 6));
+    return `hsl(${hue.toFixed(0)} ${sat.toFixed(0)}% ${light.toFixed(0)}%)`;
+  }
+
+  function spineTilt(index) {
+    if (index % 19 === 5) return 1.4;
+    if (index % 23 === 11) return -1.2;
+    return 0;
+  }
+
+  function spineHTML(item, index) {
+    const meta = categoryMeta(item.categoryId);
+    const mark = String(item.domain || "").split(".")[0].slice(0, 12);
+    return `
+      <button class="spine ${state.selectedId === item.id ? "is-selected" : ""}" data-id="${escapeAttr(item.id)}" data-index="${index}"
+        style="--h:${spineHeight(item, index)}px;--w:${spineWidth(item, index)}px;--tilt:${spineTilt(index)}deg;--tone:${spineTone(meta.color, index)}"
+        title="${escapeAttr(item.title)} · ${escapeAttr(item.domain)}">
+        ${index % 3 === 0 ? '<span class="spine-band"></span>' : ""}
+        <span class="spine-title">${escapeHTML(item.title)}</span>
+        <span class="spine-mark">${escapeHTML(mark)}</span>
+      </button>
+    `;
+  }
+
+  function renderIndex(items) {
+    const list = $("#indexList");
+    const empty = $("#emptyState");
+    if (!loaded) {
+      list.innerHTML = "";
+      empty.classList.remove("hidden");
+      empty.querySelector("strong").textContent = "正在读取书签…";
+      empty.querySelector("span").textContent = "宿主注入数据后会自动出现。";
+      return;
+    }
+    if (!items.length) {
+      list.innerHTML = "";
+      empty.classList.remove("hidden");
+      if (!DATA.length) {
+        empty.querySelector("strong").textContent = "没有读到书签";
+        empty.querySelector("span").textContent = "确认 Chrome 里已有收藏，然后点右下角「刷新」重新读取。";
+      } else {
+        empty.querySelector("strong").textContent = "没有找到匹配的收藏";
+        empty.querySelector("span").textContent = "换一个关键词，或者切换到其他分类看看。";
+      }
+      return;
+    }
+    empty.classList.add("hidden");
+    list.innerHTML = items.map(rowHTML).join("");
+  }
+
+  function renderShelf(items) {
+    const shelfList = $("#shelfList");
+    const empty = $("#shelfEmpty");
+    if (!loaded) {
+      shelfList.innerHTML = "";
+      empty.classList.remove("hidden");
+      empty.querySelector("strong").textContent = "正在读取书签…";
+      empty.querySelector("span").textContent = "宿主注入数据后会自动出现。";
+      return;
+    }
+    const groups = CATS
+      .filter((cat) => cat.depth === 0)
+      .map((cat) => {
+        const scope = CAT_SUBTREE.get(cat.id) || new Set([cat.id]);
+        return {
+          id: cat.id,
+          name: cat.name,
+          color: cat.color,
+          items: items.filter((item) => item.categoryId && scope.has(item.categoryId)),
+        };
+      })
+      .filter((group) => group.items.length);
+    const loose = items.filter((item) => !item.categoryId);
+    if (loose.length) groups.push({ id: UNASSIGNED, name: "未分类", color: "#6a7078", items: loose });
+    shelfList.innerHTML = groups.map(({ id, name, color, items: group }) => {
+      const visible = group.slice(0, SHELF_LIMIT);
+      const rest = group.length - visible.length;
+      return `
+        <section class="shelf">
+          <div class="shelf-head">
+            <span class="shelf-dot" style="background:${color}"></span>
+            <span class="shelf-title">${escapeHTML(name)}</span>
+            <span class="shelf-count">${group.length}</span>
+            <span class="shelf-line"></span>
+            ${rest > 0 ? `<button class="shelf-more" data-more="${escapeAttr(id)}" title="在索引视图里查看「${escapeAttr(name)}」全部 ${group.length} 条">+${rest} 全部 →</button>` : ""}
+          </div>
+          <div class="shelf-body">
+            <div class="shelf-track">
+              ${visible.map(spineHTML).join("")}
+            </div>
+            <div class="shelf-board"></div>
+          </div>
+        </section>
+      `;
+    }).join("");
+    empty.classList.toggle("hidden", groups.length > 0);
+    requestAnimationFrame(updateShelfOverflow);
+  }
+
+  function updateShelfOverflow() {
+    $$(".shelf-track").forEach((track) => {
+      track.classList.toggle("has-overflow", track.scrollWidth > track.clientWidth + 4);
+    });
+  }
+
+  function pad2(value) { return String(value).padStart(2, "0"); }
+
+  function fmtDate(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    if (Number.isNaN(d.getTime())) return "";
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  /** 状态栏用的紧凑时间：11-08 19:52 */
+  function fmtShort(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    if (Number.isNaN(d.getTime())) return "";
+    return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  function fmtClock(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    if (Number.isNaN(d.getTime())) return "";
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  function sourceLabel() {
+    const list = Array.isArray(META.sources) ? META.sources.filter((s) => s && s.label) : [];
+    if (!list.length) return "本地书签";
+    const labels = [...new Set(list.map((s) => s.label))];
+    return labels.join(" + ");
+  }
+
+  /** "chrome:Default" → "Chrome"；"chrome:Profile 2" → "Chrome · Profile 2" */
+  function sourceNice(raw) {
+    const text = String(raw || "").trim();
+    if (!text) return "本地书签";
+    const [head, ...rest] = text.split(":");
+    const browser = head ? head.charAt(0).toUpperCase() + head.slice(1) : "Chrome";
+    const profile = rest.join(":").trim();
+    if (!profile || /^default$/i.test(profile)) return browser;
+    return `${browser} · ${profile}`;
+  }
+
+  function updateHeader(items) {
+    const viewLabel = state.view === "index" ? "INDEX" : "SHELF";
+    $("#viewEyebrow").textContent = viewLabel;
+    if (!loaded) {
+      $("#pageTitle").textContent = "星河书签";
+      $("#pageSubtitle").textContent = "正在读取书签…";
+      $("#railCount").textContent = "—";
+      $("#statusLeft").textContent = "等待数据";
+      $("#statusRight").innerHTML = '<span class="status-dot"></span> 正在连接浏览器书签';
+      return;
+    }
+    const title = state.query
+      ? "搜索结果"
+      : state.category === "all"
+        ? "全部收藏"
+        : state.category === "recent"
+          ? "最近添加"
+          : categoryMeta(state.category).name;
+    const syncedAt = META.sources && META.sources.length ? Math.max(...META.sources.map((s) => Number(s.mtime) || 0)) : 0;
+    $("#pageTitle").textContent = title;
+    const loose = DATA.filter((item) => !item.categoryId).length;
+    const trail = MANUAL && loose > 0 && (state.category === "all" || state.category === "recent")
+      ? `<span class="crumb">未分类 ${loose}</span> `
+      : "";
+    $("#pageSubtitle").innerHTML = `${trail}<b>${items.length}</b> 条收藏 · ${escapeHTML(sourceLabel())}${syncedAt ? ` · ${fmtClock(syncedAt)} 同步` : ""}${state.query ? ` · 关键词「${escapeHTML(state.query)}」` : ""}`;
+    $("#railCount").textContent = DATA.length;
+    $("#statusLeft").textContent = `${items.length} 条结果 · ${state.view === "index" ? "索引视图" : "书脊视图"}`;
+    $("#statusRight").innerHTML = `<span class="status-dot"></span> <b>${escapeHTML(sourceLabel())}</b> 本地书签 · 只读${syncedAt ? ` · ${fmtShort(syncedAt)}` : ""}`;
+  }
+
+  function updateEnrichBtn() {
+    const button = $("#enrichBtn");
+    if (!button) return;
+    const pending = loaded ? DATA.filter((item) => !item.summary).length : 0;
+    button.hidden = pending === 0;
+    button.textContent = `补齐 ${pending} 条简介`;
+  }
+
+  function renderView() {
+    const items = getFiltered();
+    updateHeader(items);
+    $("#indexView").classList.toggle("hidden", state.view !== "index");
+    $("#shelfView").classList.toggle("hidden", state.view !== "shelf");
+    if (state.view === "index") renderIndex(items);
+    else renderShelf(items);
+    renderTabs();
+    updateEnrichBtn();
+    $$(".view-btn").forEach((button) => {
+      const active = button.dataset.view === state.view;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    return items;
+  }
+
+  function findItem(id) {
+    return DATA.find((item) => String(item.id) === String(id));
+  }
+
+  function cardHTML(item) {
+    const meta = categoryMeta(item.categoryId);
+    const position = DATA.indexOf(item);
+    const number = String(position >= 0 ? position + 1 : 0).padStart(3, "0");
+    return `
+      <div class="card-top">
+        <span class="card-kicker">INDEX CARD · NO. ${number}</span>
+        <button class="card-close" data-action="close" title="关闭">${ICONS.close}</button>
+      </div>
+      ${faviconHTML(item, "card-favicon")}
+      <h2 class="card-title">${escapeHTML(item.title)}</h2>
+      <div class="card-domain">${escapeHTML(item.domain || item.url)}</div>
+      <div class="card-rule"></div>
+      <p class="card-summary">${escapeHTML(item.summary || "这条收藏还没有生成简介，可以先看下面的文件夹和网址。")}</p>
+      <div class="card-meta">
+        <span class="meta-key">分类</span>
+        <span class="meta-val">
+          <select class="card-cat" id="cardCatSelect" aria-label="改分类">
+            <option value="">未分类</option>
+            ${CATS.map((cat) => `<option value="${escapeAttr(cat.id)}" ${cat.id === item.categoryId ? "selected" : ""}>${escapeHTML("　".repeat(cat.depth) + cat.name)}</option>`).join("")}
+          </select>
+        </span>
+        <span class="meta-key">文件夹</span><span class="meta-val">${escapeHTML(item.folderParts.length ? item.folderParts.join(" / ") : "书签栏")}</span>
+        <span class="meta-key">添加</span><span class="meta-val">${escapeHTML(fmtDate(item.added) || item.time || "—")}</span>
+        <span class="meta-key">来源</span><span class="meta-val">${escapeHTML(sourceNice(item.source))}</span>
+        <span class="meta-key">网址</span><span class="meta-val card-url">${escapeHTML(item.url)}</span>
+      </div>
+      <div class="card-tags">${(item.tags || []).map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`).join("")}</div>
+      <div class="card-actions">
+        <button class="btn btn-primary" data-action="open">打开 ${ICONS.arrow}</button>
+        <button class="btn btn-ghost" data-action="copy">${ICONS.copy} 复制链接</button>
+      </div>
+      <div class="card-subactions">
+        <button class="link-btn" data-action="session">${ICONS.chat} 发到新会话</button>
+        <button class="link-btn" data-action="memory">${ICONS.pin} 记到备注</button>
+      </div>
+    `;
+  }
+
+  let hideTimer = null;
+  let suppressPreviewUntil = 0;
+
+  let undockTimer = null;
+
+  function renderCard() {
+    const id = state.selectedId ?? state.previewId;
+    const item = id == null ? null : findItem(id);
+    const panel = $("#cardPanel");
+    const main = document.querySelector(".main");
+    const docked = Boolean(item) && state.selectedId != null;
+    if (!item) {
+      panel.classList.remove("is-visible");
+      clearTimeout(undockTimer);
+      // 先让卡片淡出，再把右侧这一列收回去，避免卡片突然跳到屏幕右边
+      undockTimer = setTimeout(() => {
+        if (state.selectedId != null) return;
+        panel.classList.remove("is-docked");
+        if (main) main.classList.remove("has-card");
+        updateShelfOverflow();
+      }, 220);
+      return;
+    }
+    clearTimeout(undockTimer);
+    if (main) main.classList.toggle("has-card", docked);
+    panel.classList.toggle("is-docked", docked);
+    panel.classList.toggle("side-left", !docked && state.previewSide === "left");
+    $("#indexCard").innerHTML = cardHTML(item);
+    panel.classList.add("is-visible");
+    requestAnimationFrame(updateShelfOverflow);
+  }
+
+  function showPreview(id, pointerX) {
+    clearTimeout(hideTimer);
+    if (Date.now() < suppressPreviewUntil) return;
+    if (state.selectedId != null) return;
+    const content = $("#content");
+    if (content && typeof pointerX === "number") {
+      const rect = content.getBoundingClientRect();
+      const center = rect.left + rect.width / 2;
+      const margin = 90;
+      // 鼠标在哪半边，卡片就出现在另一半边；带一点迟滞，避免中线附近来回跳
+      if (state.previewSide === "right" && pointerX > center + margin) state.previewSide = "left";
+      else if (state.previewSide === "left" && pointerX < center - margin) state.previewSide = "right";
+    }
+    state.previewId = id;
+    renderCard();
+  }
+
+  function scheduleHide() {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      if (state.selectedId != null) return;
+      state.previewId = null;
+      renderCard();
+    }, 150);
+  }
+
+  function selectItem(id) {
+    state.selectedId = String(id);
+    state.previewId = String(id);
+    $$(".index-row, .spine").forEach((node) => {
+      node.classList.toggle("is-selected", node.dataset.id === String(id));
+    });
+    renderCard();
+  }
+
+  function clearSelection() {
+    state.selectedId = null;
+    state.previewId = null;
+    suppressPreviewUntil = Date.now() + 260;
+    $$(".index-row, .spine").forEach((node) => node.classList.remove("is-selected"));
+    renderCard();
+  }
+
+  function showToast(message) {
+    const toast = $("#toast");
+    toast.textContent = message;
+    toast.classList.add("is-visible");
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove("is-visible"), 1600);
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+    showToast("链接已复制");
+  }
+
+  function openItem(item) {
+    if (!item || !item.url) return;
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ source: "bookmarks-desk", type: "open", url: item.url }, "*");
+    } else {
+      window.open(item.url, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  function bindEvents() {
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    const kbd = document.querySelector(".search kbd");
+    if (kbd) kbd.textContent = isMac ? "⌘ K" : "Ctrl K";
+    const hint = document.querySelector(".rail-hint");
+    if (hint) hint.textContent = isMac ? "⌘K 搜索 · ESC 关闭" : "Ctrl K 搜索 · ESC 关闭";
+
+    const refreshBtn = $("#refreshBtn");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => {
+        if (refreshBtn.classList.contains("is-busy")) return;
+        refreshBtn.classList.add("is-busy");
+        refreshBtn.textContent = "读取中";
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ source: "bookmarks-desk", type: "refresh" }, "*");
+          showToast("正在重新读取浏览器书签…");
+          setTimeout(() => { directFetch(); }, 1200);
+        } else {
+          showToast("预览模式下没有宿主可刷新");
+        }
+        setTimeout(() => {
+          refreshBtn.classList.remove("is-busy");
+          refreshBtn.textContent = "刷新";
+        }, 1500);
+      });
+    }
+
+    const enrichBtn = $("#enrichBtn");
+    if (enrichBtn) {
+      enrichBtn.addEventListener("click", () => {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ source: "bookmarks-desk", type: "classify" }, "*");
+          showToast("已开始补齐简介，模型在后台处理，完成后会自动刷新");
+          enrichBtn.hidden = true;
+        } else {
+          showToast("预览模式下没有模型可用");
+        }
+      });
+    }
+
+    $("#categoryTabs").addEventListener("click", (event) => {
+      if (event.target.closest("[data-add]")) {
+        openRailAdd("");
+        return;
+      }
+      const button = event.target.closest("[data-cat]");
+      if (!button) return;
+      const id = button.dataset.cat;
+      const act = event.target.closest("[data-act]");
+      if (act) {
+        event.stopPropagation();
+        closeRailMenu();
+        if (act.dataset.act === "menu") openRailMenu(act, id);
+        return;
+      }
+      if (event.target.closest("[data-toggle]")) {
+        if (catCollapsed.has(id)) catCollapsed.delete(id);
+        else catCollapsed.add(id);
+        renderTabs();
+        return;
+      }
+      state.category = id;
+      state.selectedId = null;
+      state.previewId = null;
+      $("#content").scrollTop = 0;
+      if (railAdding) {
+        railAdding = false;
+        railAddParent = "";
+        renderTabs();
+      }
+      renderView();
+      renderCard();
+    });
+
+    $("#categoryTabs").addEventListener("dblclick", (event) => {
+      const button = event.target.closest("[data-cat]");
+      if (!button || !event.target.closest(".tab-name")) return;
+      startRailRename(button.dataset.cat);
+    });
+
+    $("#categoryTabs").addEventListener("keydown", (event) => {
+      const input = event.target.closest(".tab-rename, .tab-add-input");
+      if (!input) return;
+      event.stopPropagation();
+      if (input.id === "railAddInput") {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          createRailCat();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          closeRailAdd();
+        }
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitRailRename(input.dataset.rename, input.value);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        railRenamePending = "";
+        railEditingId = "";
+        renderTabs();
+      }
+    });
+
+    $("#categoryTabs").addEventListener("blur", (event) => {
+      const input = event.target.closest?.(".tab-rename");
+      if (!input) return;
+      commitRailRename(input.dataset.rename, input.value);
+    }, true);
+
+    const railAddRoot = $("#railAddRoot");
+    if (railAddRoot) {
+      railAddRoot.addEventListener("click", () => {
+        if (railAdding && !railAddParent) closeRailAdd();
+        else openRailAdd("");
+      });
+    }
+
+    const railSearch = $("#railCatSearch");
+    if (railSearch) {
+      railSearch.addEventListener("input", () => {
+        railQuery = railSearch.value;
+        const clear = $("#railCatSearchClear");
+        if (clear) clear.hidden = !railQuery;
+        renderTabs();
+      });
+      railSearch.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+        if (event.key === "Escape") {
+          railSearch.value = "";
+          railQuery = "";
+          const clear = $("#railCatSearchClear");
+          if (clear) clear.hidden = true;
+          renderTabs();
+          railSearch.blur();
+        }
+      });
+    }
+    const railClear = $("#railCatSearchClear");
+    if (railClear) {
+      railClear.addEventListener("click", () => {
+        if (railSearch) railSearch.value = "";
+        railQuery = "";
+        railClear.hidden = true;
+        renderTabs();
+      });
+    }
+
+    const railMenu = $("#railMenu");
+    if (railMenu) {
+      railMenu.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-menu]");
+        if (!button || button.disabled) return;
+        const kind = button.dataset.menu;
+        const cat = CAT_BY_ID.get(railMenuCat);
+        closeRailMenu();
+        if (!cat) return;
+        if (kind === "child") {
+          catCollapsed.delete(cat.id);
+          renderTabs();
+          openRailAdd(cat.id);
+          return;
+        }
+        if (kind === "rename") {
+          startRailRename(cat.id);
+          return;
+        }
+        if (kind === "up" || kind === "down") {
+          const ids = (CAT_CHILDREN.get(cat.parentId || "") || []).map((c) => c.id);
+          const index = ids.indexOf(cat.id);
+          const swap = kind === "up" ? index - 1 : index + 1;
+          if (index < 0 || swap < 0 || swap >= ids.length) return;
+          const next = ids.slice();
+          [next[index], next[swap]] = [next[swap], next[index]];
+          await mutate("category/reorder", { ids: next });
+          return;
+        }
+        if (kind === "delete") {
+          const kids = Math.max(0, categoryDescendants(cat.id).length - 1);
+          const ok = window.confirm(`删除「${cat.name}」${kids ? `及其中 ${kids} 个子分类` : ""}？归类到这些分类的收藏会回到「未分类」。`);
+          if (ok) await mutate("category/remove", { id: cat.id }, "分类已删除");
+        }
+      });
+    }
+
+    document.addEventListener("click", (event) => {
+      if (!railMenu || railMenu.hidden) return;
+      if (event.target.closest("#railMenu") || event.target.closest('[data-act="menu"]')) return;
+      closeRailMenu();
+    });
+    $("#categoryTabs").addEventListener("scroll", closeRailMenu);
+
+    const cmRoot = $("#catManager");
+    if (cmRoot) {
+      cmRoot.addEventListener("click", (event) => {
+        const action = event.target.closest("[data-action]")?.dataset.action;
+        if (action === "cm-close") closeCatManager();
+      });
+
+      $("#cmCatList").addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-cm]");
+        if (!button) return;
+        const id = button.closest("[data-id]")?.dataset.id;
+        const cat = id ? CAT_BY_ID.get(id) : null;
+        if (!cat) return;
+        const kind = button.dataset.cm;
+        if (kind === "toggle") {
+          if (catCollapsed.has(id)) catCollapsed.delete(id);
+          else catCollapsed.add(id);
+          renderCmCats();
+        } else if (kind === "color") {
+          const index = CATEGORY_PALETTE.indexOf(cat.color);
+          const next = CATEGORY_PALETTE[(index + 1) % CATEGORY_PALETTE.length];
+          await mutate("category/update", { id, color: next });
+        } else if (kind === "child") {
+          cmAddParent = id;
+          catCollapsed.delete(id);
+          renderCmCats();
+          const input = $("#cmAddInput");
+          if (input) {
+            input.placeholder = `在「${cat.name}」下新建子分类`;
+            input.focus();
+          }
+        } else if (kind === "up" || kind === "down") {
+          const siblings = (CAT_CHILDREN.get(cat.parentId || "") || []).slice();
+          const index = siblings.findIndex((c) => c.id === id);
+          const swap = kind === "up" ? index - 1 : index + 1;
+          if (index < 0 || swap < 0 || swap >= siblings.length) return;
+          [siblings[index], siblings[swap]] = [siblings[swap], siblings[index]];
+          await mutate("category/reorder", { ids: siblings.map((c) => c.id) });
+        } else if (kind === "del") {
+          const kids = categoryDescendants(id).length - 1;
+          const total = CAT_TOTAL.get(id) || 0;
+          const extra = kids > 0 ? `\n它下面还有 ${kids} 个子分类，会一起删除。` : "";
+          const ok = window.confirm(`删除分类「${cat.name}」？${extra}\n其中 ${total} 条书签会回到「未分类」，书签本身不会丢。`);
+          if (!ok) return;
+          await mutate("category/remove", { id }, `已删除「${cat.name}」`);
+        }
+      });
+
+      $("#cmCatList").addEventListener("change", async (event) => {
+        const input = event.target.closest('[data-cm="rename"]');
+        if (!input) return;
+        const id = input.closest("[data-id]")?.dataset.id;
+        const name = input.value.trim();
+        if (!id || !name) {
+          renderCmCats();
+          return;
+        }
+        await mutate("category/update", { id, name });
+      });
+
+      $("#cmCatList").addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
+        const input = event.target.closest('[data-cm="rename"]');
+        if (!input) return;
+        event.preventDefault();
+        input.blur();
+      });
+
+      $("#cmAddForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const input = $("#cmAddInput");
+        const name = input.value.trim();
+        if (!name) return;
+        const parentId = cmAddParent;
+        const parentName = parentId ? (CAT_BY_ID.get(parentId)?.name || "") : "";
+        const ok = await mutate(
+          "category/add",
+          { name, parentId },
+          parentName ? `已在「${parentName}」下创建「${name}」` : `已创建「${name}」`,
+        );
+        if (ok) {
+          if (parentId) catCollapsed.delete(parentId);
+          input.value = "";
+          cmAddParent = "";
+          input.placeholder = "新分类名，回车创建";
+          renderCmParentChip();
+          renderCmCats();
+        }
+      });
+
+      $("#cmParentChip").addEventListener("click", (event) => {
+        if (!event.target.closest('[data-cm="clear-parent"]')) return;
+        cmAddParent = "";
+        const input = $("#cmAddInput");
+        if (input) input.placeholder = "新分类名，回车创建";
+        renderCmParentChip();
+      });
+
+      $("#cmExpandAll").addEventListener("click", () => {
+        const root = buildFolderTree();
+        const all = [];
+        (function walk(node) {
+          for (const child of node.children.values()) {
+            all.push(child.full);
+            walk(child);
+          }
+        })(root);
+        const everyOpen = all.length > 0 && all.every((key) => cmExpanded.has(key));
+        cmExpanded = new Set(everyOpen ? [] : all);
+        renderCmFolders();
+      });
+
+      $("#cmFolderList").addEventListener("click", (event) => {
+        const caret = event.target.closest('[data-cm="toggle"]');
+        if (!caret) return;
+        const folder = caret.closest("[data-folder]")?.dataset.folder;
+        if (!folder) return;
+        if (cmExpanded.has(folder)) cmExpanded.delete(folder);
+        else cmExpanded.add(folder);
+        renderCmFolders();
+      });
+
+      $("#cmFolderList").addEventListener("change", async (event) => {
+        const select = event.target.closest('[data-cm="assign"]');
+        if (!select) return;
+        const folder = select.closest("[data-folder]")?.dataset.folder;
+        if (!folder || folder === "__root__") return;
+        const categoryId = select.value;
+        const label = categoryId ? (CAT_BY_ID.get(categoryId)?.name || "分类") : "未分类";
+        const leaf = folder.split(" / ").pop();
+        await mutate("category/assign-folder", { folder, categoryId }, `「${leaf}」已归到「${label}」`);
+      });
+    }
+
+    $$(".view-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.view = button.dataset.view;
+        $("#content").scrollTop = 0;
+        renderView();
+      });
+    });
+
+    $("#searchInput").addEventListener("input", (event) => {
+      state.query = event.target.value;
+      state.selectedId = null;
+      state.previewId = null;
+      renderView();
+      renderCard();
+    });
+
+    const listRoot = $("#content");
+    listRoot.addEventListener("mouseover", (event) => {
+      const row = event.target.closest("[data-id]");
+      if (!row || !listRoot.contains(row)) return;
+      if (row.contains(event.relatedTarget)) return;
+      showPreview(row.dataset.id, event.clientX);
+    });
+    listRoot.addEventListener("mouseout", (event) => {
+      const row = event.target.closest("[data-id]");
+      if (!row || !listRoot.contains(row)) return;
+      if (row.contains(event.relatedTarget)) return;
+      scheduleHide();
+    });
+    listRoot.addEventListener("click", (event) => {
+      const more = event.target.closest("[data-more]");
+      if (more) {
+        state.category = more.dataset.more;
+        state.view = "index";
+        state.selectedId = null;
+        state.previewId = null;
+        $("#content").scrollTop = 0;
+        renderView();
+        renderCard();
+        return;
+      }
+      const row = event.target.closest("[data-id]");
+      if (!row) return;
+      selectItem(row.dataset.id);
+    });
+    listRoot.addEventListener("dblclick", (event) => {
+      const row = event.target.closest("[data-id]");
+      if (!row) return;
+      const item = findItem(row.dataset.id);
+      if (item) openItem(item);
+    });
+
+    $("#indexCard").addEventListener("mouseenter", () => clearTimeout(hideTimer));
+    $("#indexCard").addEventListener("mouseleave", scheduleHide);
+    $("#indexCard").addEventListener("click", (event) => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (!action) return;
+      const item = findItem(state.selectedId ?? state.previewId);
+      if (!item) return;
+      if (action === "close") clearSelection();
+      if (action === "open") openItem(item);
+      if (action === "copy") copyText(item.url);
+      if (action === "session" || action === "memory") {
+        if (window.parent && window.parent !== window && typeof window.__dshAction === "function") {
+          window.__dshAction(action);
+        } else if (action === "session") {
+          copyText(`${item.title}\n${item.url}\n${item.summary || ""}`.trim());
+        } else {
+          showToast("已记到本地备注");
+        }
+      }
+    });
+
+    $("#indexCard").addEventListener("change", async (event) => {
+      const select = event.target.closest("#cardCatSelect");
+      if (!select) return;
+      const item = findItem(state.selectedId ?? state.previewId);
+      if (!item) return;
+      const categoryId = select.value;
+      const label = categoryId ? (CAT_BY_ID.get(categoryId)?.name || "分类") : "未分类";
+      await mutate("category/assign-item", { url: item.url, categoryId }, `已改到「${label}」`);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-id], #cardPanel, #categoryTabs, .view-switch, .search, #catManager")) return;
+      if (state.selectedId != null) clearSelection();
+    });
+
+    window.addEventListener("resize", () => {
+      if (state.view === "shelf") requestAnimationFrame(updateShelfOverflow);
+      requestAnimationFrame(markRailOverflow);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        $("#searchInput").focus();
+        $("#searchInput").select();
+        return;
+      }
+      if (event.key === "Escape") {
+        const manager = $("#catManager");
+        if (manager && !manager.hidden) {
+          closeCatManager();
+          return;
+        }
+        if (state.selectedId != null) clearSelection();
+        else if ($("#searchInput").value) {
+          $("#searchInput").value = "";
+          state.query = "";
+          renderView();
+        } else {
+          $("#searchInput").blur();
+        }
+        return;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        const items = getFiltered();
+        if (!items.length) return;
+        event.preventDefault();
+        const current = items.findIndex((item) => item.id === state.selectedId);
+        let next = event.key === "ArrowDown" ? current + 1 : current - 1;
+        if (current < 0) next = event.key === "ArrowDown" ? 0 : items.length - 1;
+        next = Math.max(0, Math.min(items.length - 1, next));
+        selectItem(items[next].id);
+        const node = document.querySelector(`[data-id="${items[next].id}"]`);
+        if (node) node.scrollIntoView({ block: "nearest" });
+        return;
+      }
+      if (event.key === "Enter" && state.selectedId != null) {
+        const item = findItem(state.selectedId);
+        if (item) openItem(item);
+      }
+    });
+  }
+
+  function relTime(ms) {
+    if (!ms) return "";
+    const diff = Date.now() - ms;
+    const day = 86400000;
+    if (diff < day) return "今天";
+    if (diff < day * 2) return "昨天";
+    if (diff < day * 30) return `${Math.floor(diff / day)} 天前`;
+    if (diff < day * 365) return `${Math.floor(diff / (day * 30))} 个月前`;
+    return `${Math.floor(diff / (day * 365))} 年前`;
+  }
+
+  /* 兜底：如果宿主 postMessage 没送达（比如客户端脚本版本不匹配），面板自己拉一次 /state */
+  async function directFetch(force) {
+    try {
+      const response = await fetch(force ? "../state?refresh=1" : "../state", { cache: "no-store", credentials: "same-origin" });
+      if (!response.ok) return false;
+      const data = await response.json();
+      const list = Array.isArray(data && data.items) ? data.items : [];
+      if (!list.length) return false;
+      const nameById = new Map((data.categories || []).map((c) => [c.id, c.name]));
+      const items = list.map((raw, index) => ({
+        id: index + 1,
+        title: raw.title,
+        domain: raw.host || hostOf(raw.url),
+        url: raw.url,
+        category: nameById.get(raw.categoryId) || "未分类",
+        categoryId: raw.categoryId || "",
+        folder: raw.folder || "",
+        added: raw.added || 0,
+        time: relTime(raw.added),
+        source: raw.sourceLabel || "Chrome",
+        desc: raw.summary || "",
+        tags: Array.isArray(raw.tags) ? raw.tags : [],
+        inbox: !raw.enriched,
+      }));
+      window.__applyData({
+        items,
+        categoryDefs: data.categories || [],
+        manual: Boolean(data.manual),
+        folderMap: data.folderMap || {},
+        sources: data.sources || [],
+        builtAt: data.builtAt || 0,
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /* 面板自己轮询宿主的面板版本：index.html 被改过后自动重载，不用手动刷 */
+  let panelVersion = 0;
+  async function checkPanelVersion() {
+    try {
+      const response = await fetch("version", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      const at = Number(data && data.at) || 0;
+      if (!at) return;
+      if (!panelVersion) { panelVersion = at; return; }
+      if (at !== panelVersion) location.reload();
+    } catch (error) {
+      /* 静态预览或宿主未就绪时忽略 */
+    }
+  }
+
+  function init() {
+    bindEvents();
+    renderView();
+    const tag = $("#buildTag");
+    if (tag) {
+      tag.textContent = "v" + PANEL_BUILD.slice(11);
+      tag.title = "面板构建时间 " + PANEL_BUILD;
+    }
+    checkPanelVersion();
+    setInterval(checkPanelVersion, 20000);
+    setTimeout(() => { if (!loaded) directFetch(); }, 2500);
+    setTimeout(() => { if (!loaded) directFetch(); }, 6000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkPanelVersion();
+    });
+    const body = document.querySelector(".body");
+    if (body) {
+      body.addEventListener("transitionend", (event) => {
+        if (event.propertyName.indexOf("grid-template") === 0) updateShelfOverflow();
+      });
+    }
+  }
+
+  window.__applyData = function (payload) {
+    const rawItems = Array.isArray(payload && payload.items) ? payload.items : [];
+    syncCategories(
+      payload && payload.categoryDefs,
+      payload && payload.manual,
+      payload && payload.folderMap,
+    );
+    DATA = rawItems.map(normalizeItem);
+    computeCategoryStats();
+    folderTreeCache = null;
+    META = {
+      sources: payload && Array.isArray(payload.sources) ? payload.sources : [],
+      builtAt: Number(payload && payload.builtAt) || 0,
+    };
+    const first = !loaded;
+    loaded = true;
+    if (first) {
+      state.category = "all";
+      state.query = "";
+      state.selectedId = null;
+      state.previewId = null;
+      const input = $("#searchInput");
+      if (input) input.value = "";
+    } else {
+      const ids = new Set(DATA.map((item) => item.id));
+      if (state.selectedId != null && !ids.has(state.selectedId)) state.selectedId = null;
+      if (state.previewId != null && !ids.has(state.previewId)) state.previewId = null;
+      if (state.category !== "all" && state.category !== "recent" && state.category !== UNASSIGNED && !CAT_BY_ID.has(state.category)) {
+        state.category = "all";
+      }
+    }
+    renderView();
+    renderCard();
+    if ($("#catManager") && !$("#catManager").hidden) renderCatManager();
+  };
+
+  window.showToast = showToast;
+  window.__setCurrent = function (item) {
+    if (item && item.id != null) {
+      state.selectedId = String(item.id);
+      renderCard();
+    }
+  };
+  window.__dshAction = function (kind) {
+    const item = findItem(state.selectedId ?? state.previewId);
+    if (!item) return;
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source: "bookmarks-desk",
+        type: kind,
+        item: {
+          id: item.id,
+          title: item.title,
+          url: item.url,
+          domain: item.domain,
+          category: item.category,
+          summary: item.summary,
+          desc: item.summary,
+          time: item.time,
+          source: item.source,
+        },
+      }, "*");
+    }
+  };
+
+  init();
+
+</script>
+
+  <script>
+    (function () {
+      var parentWin = window.parent !== window ? window.parent : null;
+      function post(type, detail) {
+        if (!parentWin) return;
+        try { parentWin.postMessage(Object.assign({ source: "bookmarks-desk", type: type }, detail || {}), "*"); } catch (e) {}
+      }
+      window.__dshPost = post;
+      window.addEventListener("message", function (event) {
+        var data = event.data;
+        if (!data || data.source !== "dsh-host") return;
+        if (data.type === "data" && typeof window.__applyData === "function") {
+          window.__dshReceived = true;
+          window.__applyData(data.payload);
+        }
+        if (data.type === "toast" && data.message && typeof window.showToast === "function") window.showToast(data.message);
+      });
+      window.addEventListener("DOMContentLoaded", function () {
+        var tries = 0;
+        var tick = function () {
+          if (window.__dshReceived) return true;
+          post("ready");
+          tries += 1;
+          return tries > 40;
+        };
+        setTimeout(tick, 0);
+        var timer = setInterval(function () {
+          if (tick()) clearInterval(timer);
+        }, 250);
+      });
+    })();
+  </script>
+
+</body>
+</html>

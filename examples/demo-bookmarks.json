@@ -1,0 +1,35 @@
+{
+  "$comment": "示例数据：全部是虚构的收藏，只用来预览面板 / 生成截图。真实书签不会进仓库。",
+  "categories": [
+    { "id": "demo-ai", "name": "AI 与模型", "color": "#9b8afb" },
+    { "id": "demo-dev", "name": "开发与代码", "color": "#6fbf9b" },
+    { "id": "demo-media", "name": "影视与音视频", "color": "#d8a657" },
+    { "id": "demo-tools", "name": "软件与工具", "color": "#6c9bd1" },
+    { "id": "demo-docs", "name": "文档与教程", "color": "#69b8b3" },
+    { "id": "demo-inbox", "name": "临时收件箱", "color": "#8a8f98" }
+  ],
+  "bookmarks": [
+    { "title": "DeepSeek API 文档 · 快速开始", "url": "https://api-docs.deepseek.com/", "folder": "AI 与模型 / 官方文档", "category": "AI 与模型" },
+    { "title": "OpenAI Platform · API Reference", "url": "https://platform.openai.com/docs", "folder": "AI 与模型 / 官方文档", "category": "AI 与模型" },
+    { "title": "Hugging Face · Models", "url": "https://huggingface.co/models", "folder": "AI 与模型 / 模型库", "category": "AI 与模型" },
+    { "title": "Claude · 对话与写作", "url": "https://claude.ai/", "folder": "AI 与模型 / 对话", "category": "AI 与模型" },
+    { "title": "Midjourney · 图像生成", "url": "https://www.midjourney.com/", "folder": "AI 与模型 / 图像", "category": "AI 与模型" },
+    { "title": "GitHub Trending · 今日热门仓库", "url": "https://github.com/trending", "folder": "开发与代码 / 开源", "category": "开发与代码" },
+    { "title": "MDN Web Docs · 中文", "url": "https://developer.mozilla.org/zh-CN/", "folder": "开发与代码 / 前端", "category": "开发与代码" },
+    { "title": "Stack Overflow · Questions", "url": "https://stackoverflow.com/questions", "folder": "开发与代码 / 问答", "category": "开发与代码" },
+    { "title": "npm · 包管理", "url": "https://www.npmjs.com/", "folder": "开发与代码 / 工具链", "category": "开发与代码" },
+    { "title": "Vite · 前端构建指南", "url": "https://vite.dev/guide/", "folder": "开发与代码 / 前端", "category": "开发与代码" },
+    { "title": "YouTube", "url": "https://www.youtube.com/", "folder": "影视与音视频 / 视频", "category": "影视与音视频" },
+    { "title": "哔哩哔哩 · 番剧与学习区", "url": "https://www.bilibili.com/", "folder": "影视与音视频 / 视频", "category": "影视与音视频" },
+    { "title": "网易云音乐 · 每日推荐", "url": "https://music.163.com/", "folder": "影视与音视频 / 音乐", "category": "影视与音视频" },
+    { "title": "Spotify · Web Player", "url": "https://www.spotify.com/", "folder": "影视与音视频 / 音乐", "category": "影视与音视频" },
+    { "title": "Visual Studio Code · Download", "url": "https://code.visualstudio.com/download", "folder": "软件与工具 / 下载", "category": "软件与工具" },
+    { "title": "Figma · 在线协作设计", "url": "https://www.figma.com/", "folder": "软件与工具 / 设计", "category": "软件与工具" },
+    { "title": "Obsidian · 本地笔记", "url": "https://obsidian.md/", "folder": "软件与工具 / 笔记", "category": "软件与工具" },
+    { "title": "Kubernetes 中文文档", "url": "https://kubernetes.io/zh-cn/docs/", "folder": "文档与教程 / 手册", "category": "文档与教程" },
+    { "title": "Human Interface Guidelines", "url": "https://developer.apple.com/design/human-interface-guidelines", "folder": "文档与教程 / 设计规范", "category": "文档与教程" },
+    { "title": "React · 官方教程", "url": "https://react.dev/learn", "folder": "文档与教程 / 前端", "category": "文档与教程" },
+    { "title": "稍后再读：一篇还没归类的长文", "url": "https://example.com/reading-later", "folder": "临时收件箱", "category": "临时收件箱" },
+    { "title": "周末待办：还没想好放哪", "url": "https://example.com/weekend-plan", "folder": "临时收件箱", "category": "临时收件箱" }
+  ]
+}

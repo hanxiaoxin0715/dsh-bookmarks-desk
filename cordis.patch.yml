@@ -1,0 +1,4 @@
+# bookmarks-desk：侧栏「收藏夹」面板 + /bookmarks-desk 接口
+- insert:
+    - id: bookmarks-desk
+      name: 'dsh-bookmarks-desk'

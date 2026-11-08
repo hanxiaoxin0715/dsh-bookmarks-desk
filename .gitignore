@@ -1,0 +1,21 @@
+# 依赖
+node_modules/
+
+# 本地开发/调试产物（含本机绝对路径与真实书签截图，不随仓库发布）
+mockups/
+.shots/
+assets/
+build-panel.mjs
+preview-panel.mjs
+scripts/make-docs-shot.mjs
+
+# 面板历史备份与旧版打包资源
+panel/*.bak-*
+panel/lucide.js
+panel/tailwind.js
+
+# 系统与日志
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
